@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProject, deleteProject } from "@/server/projects/actions";
@@ -33,13 +34,11 @@ export function ProjectSettings({
             await updateProject(project.id, {
               name: f.get("name"),
               description: f.get("description"),
-            });
+            }).then(unwrap);
             setSaved(true);
             router.refresh();
           } catch (err) {
-            setError(
-              err instanceof Error ? err.message : "Proje güncellenemedi.",
-            );
+            setError(errorMessage(err, "Proje güncellenemedi."));
           } finally {
             setBusy(false);
           }
@@ -119,13 +118,11 @@ export function ProjectSettings({
                 setBusy(true);
                 setError("");
                 try {
-                  await deleteProject(project.id, confirm);
+                  await deleteProject(project.id, confirm).then(unwrap);
                   router.push("/app/projects");
                   router.refresh();
                 } catch (err) {
-                  setError(
-                    err instanceof Error ? err.message : "Proje silinemedi.",
-                  );
+                  setError(errorMessage(err, "Proje silinemedi."));
                   setBusy(false);
                 }
               }}

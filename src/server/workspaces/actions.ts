@@ -1,4 +1,5 @@
 "use server";
+import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
 import { createHash, randomBytes } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
@@ -29,107 +30,115 @@ async function manager(workspaceId: string) {
   const user = await requireUser();
   const me = await workspaceAccess(workspaceId, user.id);
   if (!canManageMembers(me.role))
-    throw new Error("Üyeleri yönetmek için yönetici yetkisi gerekir.");
+    throw new UserError("Üyeleri yönetmek için yönetici yetkisi gerekir.");
   return { user, me };
 }
 
 export async function createInvite(workspaceId: string, input: unknown) {
-  const data = inviteSchema.parse(input);
-  const { user, me } = await manager(workspaceId);
-  if (!canManageRole(me.role, data.role))
-    throw new Error("Bu rolü verme yetkiniz yok.");
-  const [existing] = await db
-    .select({ id: members.id })
-    .from(members)
-    .innerJoin(users, eq(users.id, members.userId))
-    .where(
-      and(
-        eq(members.workspaceId, workspaceId),
-        sql`lower(${users.email}) = ${data.email}`,
-      ),
-    );
-  if (existing) throw new Error("Bu kişi zaten çalışma alanının üyesi.");
-  const token = randomBytes(32).toString("base64url");
-  await db.transaction(async (tx) => {
-    // A newer invite replaces any pending one for the same address.
-    await tx
+  return attempt(async () => {
+    const data = inviteSchema.parse(input);
+    const { user, me } = await manager(workspaceId);
+    if (!canManageRole(me.role, data.role))
+      throw new UserError("Bu rolü verme yetkiniz yok.");
+    const [existing] = await db
+      .select({ id: members.id })
+      .from(members)
+      .innerJoin(users, eq(users.id, members.userId))
+      .where(
+        and(
+          eq(members.workspaceId, workspaceId),
+          sql`lower(${users.email}) = ${data.email}`,
+        ),
+      );
+    if (existing) throw new UserError("Bu kişi zaten çalışma alanının üyesi.");
+    const token = randomBytes(32).toString("base64url");
+    await db.transaction(async (tx) => {
+      // A newer invite replaces any pending one for the same address.
+      await tx
+        .update(invitations)
+        .set({ revokedAt: new Date() })
+        .where(
+          and(
+            eq(invitations.workspaceId, workspaceId),
+            eq(invitations.email, data.email),
+            isNull(invitations.acceptedAt),
+            isNull(invitations.revokedAt),
+          ),
+        );
+      await tx.insert(invitations).values({
+        workspaceId,
+        email: data.email,
+        role: data.role,
+        tokenHash: hashToken(token),
+        invitedBy: user.id,
+        expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+      });
+    });
+    revalidatePath("/app/settings/members");
+    return token;
+  });
+}
+
+export async function revokeInvite(workspaceId: string, inviteId: string) {
+  return attempt(async () => {
+    z.uuid().parse(inviteId);
+    await manager(workspaceId);
+    const revoked = await db
       .update(invitations)
       .set({ revokedAt: new Date() })
       .where(
         and(
+          eq(invitations.id, inviteId),
           eq(invitations.workspaceId, workspaceId),
-          eq(invitations.email, data.email),
           isNull(invitations.acceptedAt),
           isNull(invitations.revokedAt),
         ),
-      );
-    await tx.insert(invitations).values({
-      workspaceId,
-      email: data.email,
-      role: data.role,
-      tokenHash: hashToken(token),
-      invitedBy: user.id,
-      expiresAt: new Date(Date.now() + INVITE_TTL_MS),
-    });
+      )
+      .returning({ id: invitations.id });
+    if (!revoked.length) throw new UserError("Davet bulunamadı.");
+    revalidatePath("/app/settings/members");
   });
-  revalidatePath("/app/settings/members");
-  return token;
-}
-
-export async function revokeInvite(workspaceId: string, inviteId: string) {
-  z.uuid().parse(inviteId);
-  await manager(workspaceId);
-  const revoked = await db
-    .update(invitations)
-    .set({ revokedAt: new Date() })
-    .where(
-      and(
-        eq(invitations.id, inviteId),
-        eq(invitations.workspaceId, workspaceId),
-        isNull(invitations.acceptedAt),
-        isNull(invitations.revokedAt),
-      ),
-    )
-    .returning({ id: invitations.id });
-  if (!revoked.length) throw new Error("Davet bulunamadı.");
-  revalidatePath("/app/settings/members");
 }
 
 export async function acceptInvite(token: string) {
-  z.string().min(20).max(100).parse(token);
-  const user = await requireUser();
-  const workspaceId = await db.transaction(async (tx) => {
-    // Locking the row makes concurrent accepts of the same token safe.
-    const [invite] = await tx
-      .select()
-      .from(invitations)
-      .where(eq(invitations.tokenHash, hashToken(token)))
-      .for("update");
-    if (
-      !invite ||
-      invite.acceptedAt ||
-      invite.revokedAt ||
-      invite.expiresAt < new Date()
-    )
-      throw new Error("Davet geçersiz veya süresi dolmuş.");
-    if (invite.email !== user.email.toLowerCase())
-      throw new Error("Bu davet farklı bir e-posta adresi için oluşturulmuş.");
-    await tx
-      .insert(members)
-      .values({
-        workspaceId: invite.workspaceId,
-        userId: user.id,
-        role: invite.role,
-      })
-      .onConflictDoNothing();
-    await tx
-      .update(invitations)
-      .set({ acceptedAt: new Date() })
-      .where(eq(invitations.id, invite.id));
-    return invite.workspaceId;
+  return attempt(async () => {
+    z.string().min(20).max(100).parse(token);
+    const user = await requireUser();
+    const workspaceId = await db.transaction(async (tx) => {
+      // Locking the row makes concurrent accepts of the same token safe.
+      const [invite] = await tx
+        .select()
+        .from(invitations)
+        .where(eq(invitations.tokenHash, hashToken(token)))
+        .for("update");
+      if (
+        !invite ||
+        invite.acceptedAt ||
+        invite.revokedAt ||
+        invite.expiresAt < new Date()
+      )
+        throw new UserError("Davet geçersiz veya süresi dolmuş.");
+      if (invite.email !== user.email.toLowerCase())
+        throw new UserError(
+          "Bu davet farklı bir e-posta adresi için oluşturulmuş.",
+        );
+      await tx
+        .insert(members)
+        .values({
+          workspaceId: invite.workspaceId,
+          userId: user.id,
+          role: invite.role,
+        })
+        .onConflictDoNothing();
+      await tx
+        .update(invitations)
+        .set({ acceptedAt: new Date() })
+        .where(eq(invitations.id, invite.id));
+      return invite.workspaceId;
+    });
+    revalidatePath("/app", "layout");
+    return workspaceId;
   });
-  revalidatePath("/app", "layout");
-  return workspaceId;
 }
 
 async function ownerCount(tx: Pick<typeof db, "select">, workspaceId: string) {
@@ -147,69 +156,73 @@ export async function changeMemberRole(
   memberId: string,
   role: unknown,
 ) {
-  z.uuid().parse(memberId);
-  const next = roleSchema.parse(role);
-  const { user, me } = await manager(workspaceId);
-  await db.transaction(async (tx) => {
-    const [target] = await tx
-      .select()
-      .from(members)
-      .where(
-        and(eq(members.id, memberId), eq(members.workspaceId, workspaceId)),
+  return attempt(async () => {
+    z.uuid().parse(memberId);
+    const next = roleSchema.parse(role);
+    const { user, me } = await manager(workspaceId);
+    await db.transaction(async (tx) => {
+      const [target] = await tx
+        .select()
+        .from(members)
+        .where(
+          and(eq(members.id, memberId), eq(members.workspaceId, workspaceId)),
+        )
+        .for("update");
+      if (!target) throw new UserError("Üye bulunamadı.");
+      if (target.userId === user.id)
+        throw new UserError("Kendi rolünüzü değiştiremezsiniz.");
+      if (!canManageRole(me.role, target.role) || !canManageRole(me.role, next))
+        throw new UserError("Bu rolü değiştirme yetkiniz yok.");
+      if (
+        target.role === "owner" &&
+        next !== "owner" &&
+        (await ownerCount(tx, workspaceId)) <= 1
       )
-      .for("update");
-    if (!target) throw new Error("Üye bulunamadı.");
-    if (target.userId === user.id)
-      throw new Error("Kendi rolünüzü değiştiremezsiniz.");
-    if (!canManageRole(me.role, target.role) || !canManageRole(me.role, next))
-      throw new Error("Bu rolü değiştirme yetkiniz yok.");
-    if (
-      target.role === "owner" &&
-      next !== "owner" &&
-      (await ownerCount(tx, workspaceId)) <= 1
-    )
-      throw new Error("Çalışma alanında en az bir sahip kalmalı.");
-    await tx
-      .update(members)
-      .set({ role: next, updatedAt: new Date() })
-      .where(eq(members.id, memberId));
+        throw new UserError("Çalışma alanında en az bir sahip kalmalı.");
+      await tx
+        .update(members)
+        .set({ role: next, updatedAt: new Date() })
+        .where(eq(members.id, memberId));
+    });
+    revalidatePath("/app/settings/members");
   });
-  revalidatePath("/app/settings/members");
 }
 
 export async function removeMember(workspaceId: string, memberId: string) {
-  z.uuid().parse(workspaceId);
-  z.uuid().parse(memberId);
-  const user = await requireUser();
-  const me = await workspaceAccess(workspaceId, user.id);
-  await db.transaction(async (tx) => {
-    const [target] = await tx
-      .select()
-      .from(members)
-      .where(
-        and(eq(members.id, memberId), eq(members.workspaceId, workspaceId)),
+  return attempt(async () => {
+    z.uuid().parse(workspaceId);
+    z.uuid().parse(memberId);
+    const user = await requireUser();
+    const me = await workspaceAccess(workspaceId, user.id);
+    await db.transaction(async (tx) => {
+      const [target] = await tx
+        .select()
+        .from(members)
+        .where(
+          and(eq(members.id, memberId), eq(members.workspaceId, workspaceId)),
+        )
+        .for("update");
+      if (!target) throw new UserError("Üye bulunamadı.");
+      const self = target.userId === user.id;
+      if (
+        !self &&
+        !(canManageMembers(me.role) && canManageRole(me.role, target.role))
       )
-      .for("update");
-    if (!target) throw new Error("Üye bulunamadı.");
-    const self = target.userId === user.id;
-    if (
-      !self &&
-      !(canManageMembers(me.role) && canManageRole(me.role, target.role))
-    )
-      throw new Error("Bu üyeyi çıkarma yetkiniz yok.");
-    if (target.role === "owner" && (await ownerCount(tx, workspaceId)) <= 1)
-      throw new Error("Son sahip çalışma alanından çıkarılamaz.");
-    await tx.delete(members).where(eq(members.id, memberId));
-    // Tasks must not stay assigned to someone who lost access.
-    await tx
-      .update(tasks)
-      .set({ assigneeId: null, updatedAt: new Date() })
-      .where(
-        and(
-          eq(tasks.assigneeId, target.userId),
-          sql`${tasks.projectId} in (select ${projects.id} from ${projects} where ${projects.workspaceId} = ${workspaceId})`,
-        ),
-      );
+        throw new UserError("Bu üyeyi çıkarma yetkiniz yok.");
+      if (target.role === "owner" && (await ownerCount(tx, workspaceId)) <= 1)
+        throw new UserError("Son sahip çalışma alanından çıkarılamaz.");
+      await tx.delete(members).where(eq(members.id, memberId));
+      // Tasks must not stay assigned to someone who lost access.
+      await tx
+        .update(tasks)
+        .set({ assigneeId: null, updatedAt: new Date() })
+        .where(
+          and(
+            eq(tasks.assigneeId, target.userId),
+            sql`${tasks.projectId} in (select ${projects.id} from ${projects} where ${projects.workspaceId} = ${workspaceId})`,
+          ),
+        );
+    });
+    revalidatePath("/app", "layout");
   });
-  revalidatePath("/app", "layout");
 }

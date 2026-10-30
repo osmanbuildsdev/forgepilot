@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Milestone as MilestoneIcon, Plus } from "lucide-react";
@@ -60,7 +61,7 @@ export function RoadmapPanel({
       router.refresh();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+      setError(errorMessage(e, "İşlem tamamlanamadı."));
       return false;
     } finally {
       setBusy(false);
@@ -213,8 +214,8 @@ export function RoadmapPanel({
               const f = Object.fromEntries(new FormData(e.currentTarget));
               const ok = await run(() =>
                 editing === "new"
-                  ? createMilestone(projectId, f)
-                  : updateMilestone(projectId, editing.id, f),
+                  ? createMilestone(projectId, f).then(unwrap)
+                  : updateMilestone(projectId, editing.id, f).then(unwrap),
               );
               if (ok) setEditing(null);
             }}
@@ -264,7 +265,7 @@ export function RoadmapPanel({
                       )
                     ) {
                       const ok = await run(() =>
-                        deleteMilestone(projectId, editing.id),
+                        deleteMilestone(projectId, editing.id).then(unwrap),
                       );
                       if (ok) setEditing(null);
                     }

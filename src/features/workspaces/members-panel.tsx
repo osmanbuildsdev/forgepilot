@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -59,7 +60,7 @@ export function MembersPanel({
       await action();
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+      setError(errorMessage(e, "İşlem tamamlanamadı."));
     } finally {
       setBusy(false);
     }
@@ -78,7 +79,7 @@ export function MembersPanel({
               const token = await createInvite(workspaceId, {
                 email: f.get("email"),
                 role: f.get("role"),
-              });
+              }).then(unwrap);
               setLink(`${window.location.origin}/invite/${token}`);
               form.reset();
             });
@@ -157,7 +158,7 @@ export function MembersPanel({
                           workspaceId,
                           p.memberId,
                           e.target.value,
-                        ),
+                        ).then(unwrap),
                       )
                     }
                   >
@@ -182,7 +183,9 @@ export function MembersPanel({
                       );
                       if (ok)
                         void run(async () => {
-                          await removeMember(workspaceId, p.memberId);
+                          await removeMember(workspaceId, p.memberId).then(
+                            unwrap,
+                          );
                           if (self) router.push("/app");
                         });
                     }}
@@ -211,7 +214,9 @@ export function MembersPanel({
               <Button
                 variant="ghost"
                 disabled={busy}
-                onClick={() => run(() => revokeInvite(workspaceId, i.id))}
+                onClick={() =>
+                  run(() => revokeInvite(workspaceId, i.id).then(unwrap))
+                }
               >
                 İptal et
               </Button>

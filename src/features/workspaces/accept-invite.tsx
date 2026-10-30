@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { acceptInvite } from "@/server/workspaces/actions";
@@ -16,11 +17,11 @@ export function AcceptInvite({ token }: { token: string }) {
           setBusy(true);
           setError("");
           try {
-            await acceptInvite(token);
+            await acceptInvite(token).then(unwrap);
             router.push("/app");
             router.refresh();
           } catch (e) {
-            setError(e instanceof Error ? e.message : "Davet kabul edilemedi.");
+            setError(errorMessage(e, "Davet kabul edilemedi."));
             setBusy(false);
           }
         }}

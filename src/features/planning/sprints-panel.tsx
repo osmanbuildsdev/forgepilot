@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -87,7 +88,7 @@ export function SprintsPanel({
       router.refresh();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+      setError(errorMessage(e, "İşlem tamamlanamadı."));
       return false;
     } finally {
       setBusy(false);
@@ -188,7 +189,9 @@ export function SprintsPanel({
                             `${s.name} silinsin mi? Görevleri sprintten çıkarılır.`,
                           )
                         )
-                          void run(() => deleteSprint(projectId, s.id));
+                          void run(() =>
+                            deleteSprint(projectId, s.id).then(unwrap),
+                          );
                       }}
                     >
                       Sil
@@ -197,7 +200,9 @@ export function SprintsPanel({
                       size="sm"
                       disabled={busy || Boolean(active)}
                       title={active ? "Önce aktif sprinti tamamla" : undefined}
-                      onClick={() => run(() => startSprint(projectId, s.id))}
+                      onClick={() =>
+                        run(() => startSprint(projectId, s.id).then(unwrap))
+                      }
                     >
                       <Play size={13} /> Başlat
                     </Button>
@@ -250,7 +255,9 @@ export function SprintsPanel({
             onSubmit={async (e) => {
               e.preventDefault();
               const f = Object.fromEntries(new FormData(e.currentTarget));
-              const ok = await run(() => createSprint(projectId, f));
+              const ok = await run(() =>
+                createSprint(projectId, f).then(unwrap),
+              );
               if (ok) setCreating(false);
             }}
           >
@@ -313,7 +320,7 @@ export function SprintsPanel({
               e.preventDefault();
               const notes = new FormData(e.currentTarget).get("retrospective");
               const ok = await run(() =>
-                completeSprint(projectId, closing.id, notes),
+                completeSprint(projectId, closing.id, notes).then(unwrap),
               );
               if (ok) setClosing(null);
             }}

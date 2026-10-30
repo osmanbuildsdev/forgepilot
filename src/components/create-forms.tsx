@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProject, createWorkspace } from "@/server/actions";
@@ -16,11 +17,13 @@ export function WorkspaceForm() {
         setError("");
         const f = new FormData(e.currentTarget);
         try {
-          await createWorkspace(f.get("name"));
+          await createWorkspace(f.get("name")).then(unwrap);
           router.push("/app/projects/new");
           router.refresh();
-        } catch {
-          setError("Çalışma alanı oluşturulamadı. Tekrar deneyin.");
+        } catch (e) {
+          setError(
+            errorMessage(e, "Çalışma alanı oluşturulamadı. Tekrar dene."),
+          );
         } finally {
           setBusy(false);
         }
@@ -64,13 +67,11 @@ export function ProjectForm({
         setError("");
         const f = new FormData(e.currentTarget);
         try {
-          const id = await createProject(Object.fromEntries(f));
+          const id = await createProject(Object.fromEntries(f)).then(unwrap);
           router.push(`/app/projects/${id}/board`);
           router.refresh();
-        } catch {
-          setError(
-            "Proje oluşturulamadı. Proje anahtarının bu çalışma alanında benzersiz olduğundan ve yetkinizden emin olun.",
-          );
+        } catch (e) {
+          setError(errorMessage(e, "Proje oluşturulamadı. Tekrar dene."));
         } finally {
           setBusy(false);
         }

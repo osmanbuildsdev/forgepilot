@@ -27,7 +27,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Gerçek PostgreSQL ile uçtan uca doğrulama
 - [ ] Gerçek Gemini anahtarı ve OAuth ile doğrulama
 - [x] `activity_events` tablosu tipli olaylara çevrildi (`type`, `source`, opsiyonel aktör, `task_id`, `metadata`)
-- [ ] Alan modüllerine ayır (`features/*`, `server/*`)
+- [x] Sunucu işlemleri sonuç nesnesi döndürüyor; kullanıcıya gösterilecek hatalar üretimde de görünür, beklenmeyen hatalar sızmaz
+- [ ] Alan modüllerine ayır (`features/*`, `server/*`) — büyük ölçüde yapıldı
 - [ ] Dil kararı (arayüz Türkçe mi İngilizce mi)
 
 ### Çekirdek proje yönetimi
@@ -92,3 +93,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Alt görevler ve görev bağımlılıkları | Migration 0006; döngüler sunucuda engellenir |
 | 2026-10-30 | Proje ayarları sekmesi | Proje anahtarı sabit; silme işlemi anahtar yazılarak onaylanır |
 | 2026-10-30 | Sprint ve milestone yönetimi, yol haritası | Migration 0007; son tarih doğrulamasındaki hata da düzeltildi |
+| 2026-10-30 | Sunucu işlemlerinde hata yönetimi | Next.js üretimde hata mesajlarını gizlediği için işlemler { ok, error } döndürüyor |

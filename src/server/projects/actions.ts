@@ -1,4 +1,5 @@
 "use server";
+import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -20,36 +21,40 @@ const projectUpdate = z.object({
 });
 
 export async function updateProject(projectId: string, input: unknown) {
-  z.uuid().parse(projectId);
-  const data = projectUpdate.parse(input);
-  const user = await requireUser();
-  await projectAccess(projectId, user.id, true);
-  await db.transaction(async (tx) => {
-    await tx
-      .update(projects)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(projects.id, projectId));
-    await recordActivity(tx, {
-      projectId,
-      type: "project.updated",
-      actorId: user.id,
-      message: "Proje bilgileri güncellendi.",
-      metadata: { name: data.name },
+  return attempt(async () => {
+    z.uuid().parse(projectId);
+    const data = projectUpdate.parse(input);
+    const user = await requireUser();
+    await projectAccess(projectId, user.id, true);
+    await db.transaction(async (tx) => {
+      await tx
+        .update(projects)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(projects.id, projectId));
+      await recordActivity(tx, {
+        projectId,
+        type: "project.updated",
+        actorId: user.id,
+        message: "Proje bilgileri güncellendi.",
+        metadata: { name: data.name },
+      });
     });
+    revalidatePath("/app", "layout");
   });
-  revalidatePath("/app", "layout");
 }
 
 export async function deleteProject(projectId: string, confirmKey: unknown) {
-  z.uuid().parse(projectId);
-  const user = await requireUser();
-  const project = await projectAccess(projectId, user.id, true);
-  const me = await workspaceAccess(project.workspaceId, user.id);
-  if (!canManageMembers(me.role))
-    throw new Error("Projeyi yalnızca sahip veya yöneticiler silebilir.");
-  // Typing the key is the confirmation; it guards against deleting the wrong project.
-  if (confirmKey !== project.key)
-    throw new Error("Onay için proje anahtarını doğru yazmalısın.");
-  await db.delete(projects).where(eq(projects.id, projectId));
-  revalidatePath("/app", "layout");
+  return attempt(async () => {
+    z.uuid().parse(projectId);
+    const user = await requireUser();
+    const project = await projectAccess(projectId, user.id, true);
+    const me = await workspaceAccess(project.workspaceId, user.id);
+    if (!canManageMembers(me.role))
+      throw new UserError("Projeyi yalnızca sahip veya yöneticiler silebilir.");
+    // Typing the key is the confirmation; it guards against deleting the wrong project.
+    if (confirmKey !== project.key)
+      throw new UserError("Onay için proje anahtarını doğru yazmalısın.");
+    await db.delete(projects).where(eq(projects.id, projectId));
+    revalidatePath("/app", "layout");
+  });
 }

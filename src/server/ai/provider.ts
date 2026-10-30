@@ -1,3 +1,4 @@
+import { UserError } from "@/server/errors";
 import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
@@ -13,7 +14,9 @@ export interface AIProvider {
 export class GeminiProvider implements AIProvider {
   async generateTasks(context: Parameters<AIProvider["generateTasks"]>[0]) {
     if (!process.env.GEMINI_API_KEY)
-      throw new Error("Gemini henüz yapılandırılmadı. GEMINI_API_KEY ekleyin.");
+      throw new UserError(
+        "Gemini henüz yapılandırılmadı. GEMINI_API_KEY ekleyin.",
+      );
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.generateContent({
       model: process.env.GEMINI_MODEL || "gemini-2.5-flash",

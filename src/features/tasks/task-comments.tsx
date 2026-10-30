@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage, type ActionData } from "@/lib/action-result";
 import { useCallback, useEffect, useState } from "react";
 import {
   listComments,
@@ -8,7 +9,7 @@ import {
 } from "@/server/comments/actions";
 import { Button } from "@/components/ui/button";
 
-type Comment = Awaited<ReturnType<typeof listComments>>[number];
+type Comment = ActionData<typeof listComments>[number];
 
 const timeFormat = new Intl.DateTimeFormat("tr-TR", {
   day: "numeric",
@@ -41,9 +42,9 @@ export function TaskComments({
 
   const load = useCallback(async () => {
     try {
-      setItems(await listComments(projectId, taskId));
-    } catch {
-      setError("Yorumlar yüklenemedi.");
+      setItems(await listComments(projectId, taskId).then(unwrap));
+    } catch (e) {
+      setError(errorMessage(e, "Yorumlar yüklenemedi."));
       setItems([]);
     }
   }, [projectId, taskId]);
@@ -60,7 +61,7 @@ export function TaskComments({
       await load();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+      setError(errorMessage(e, "İşlem tamamlanamadı."));
       return false;
     } finally {
       setBusy(false);
@@ -100,7 +101,9 @@ export function TaskComments({
                       onSubmit={async (e) => {
                         e.preventDefault();
                         const ok = await run(() =>
-                          editComment(projectId, c.id, editing.body),
+                          editComment(projectId, c.id, editing.body).then(
+                            unwrap,
+                          ),
                         );
                         if (ok) setEditing(null);
                       }}
@@ -153,7 +156,9 @@ export function TaskComments({
                           disabled={busy}
                           onClick={() => {
                             if (window.confirm("Bu yorum silinsin mi?"))
-                              void run(() => deleteComment(projectId, c.id));
+                              void run(() =>
+                                deleteComment(projectId, c.id).then(unwrap),
+                              );
                           }}
                         >
                           Sil
@@ -172,7 +177,9 @@ export function TaskComments({
           style={{ gap: 8 }}
           onSubmit={async (e) => {
             e.preventDefault();
-            const ok = await run(() => addComment(projectId, taskId, draft));
+            const ok = await run(() =>
+              addComment(projectId, taskId, draft).then(unwrap),
+            );
             if (ok) setDraft("");
           }}
         >

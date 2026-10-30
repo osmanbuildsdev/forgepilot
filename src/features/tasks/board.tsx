@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -176,10 +177,8 @@ export function Board({
       await action();
       router.refresh();
       return true;
-    } catch {
-      setError(
-        "İşlem tamamlanamadı. Bağlantını ve çalışma alanı yetkilerini kontrol edip tekrar dene.",
-      );
+    } catch (e) {
+      setError(errorMessage(e));
       return false;
     } finally {
       setBusy(false);
@@ -189,7 +188,9 @@ export function Board({
     const task = tasks.find((t) => t.id === event.active.id);
     const status = columns.find((c) => c[0] === event.over?.id)?.[0];
     if (task && status && status !== task.status && !busy && editable)
-      await run(() => updateTask(projectId, task.id, { ...task, status }));
+      await run(() =>
+        updateTask(projectId, task.id, { ...task, status }).then(unwrap),
+      );
   }
   return (
     <>
@@ -250,7 +251,7 @@ export function Board({
                 const name = window.prompt("Yeni etiket adı");
                 if (name?.trim())
                   await run(async () => {
-                    await createLabel(projectId, { name });
+                    await createLabel(projectId, { name }).then(unwrap);
                   });
               }}
             >
@@ -333,10 +334,12 @@ export function Board({
               const data = Object.fromEntries(form);
               const ok = await run(async () => {
                 if (editing === "new")
-                  await saveTasks(projectId, { tasks: [data] });
+                  await saveTasks(projectId, { tasks: [data] }).then(unwrap);
                 else {
-                  await updateTask(projectId, editing.id, data);
-                  await setTaskLabels(projectId, editing.id, selected);
+                  await updateTask(projectId, editing.id, data).then(unwrap);
+                  await setTaskLabels(projectId, editing.id, selected).then(
+                    unwrap,
+                  );
                 }
               });
               if (ok) close();
@@ -520,7 +523,7 @@ export function Board({
                         )
                       ) {
                         const ok = await run(() =>
-                          deleteTask(projectId, editing.id),
+                          deleteTask(projectId, editing.id).then(unwrap),
                         );
                         if (ok) close();
                       }
@@ -572,10 +575,17 @@ export function Board({
                 setError("");
                 setBusy(true);
                 try {
-                  setDraft(await generateTaskDraft(projectId, instruction));
-                } catch {
+                  setDraft(
+                    await generateTaskDraft(projectId, instruction).then(
+                      unwrap,
+                    ),
+                  );
+                } catch (e) {
                   setError(
-                    "Gemini öneri oluşturamadı. API anahtarını, model erişimini ve kotanı kontrol et.",
+                    errorMessage(
+                      e,
+                      "Gemini öneri oluşturamadı. Bağlantını kontrol edip tekrar dene.",
+                    ),
                   );
                 } finally {
                   setBusy(false);
@@ -658,7 +668,7 @@ export function Board({
                         ...t,
                         status: "backlog",
                       })),
-                    }),
+                    }).then(unwrap),
                   );
                   if (ok) close();
                 }}

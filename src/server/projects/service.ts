@@ -1,3 +1,4 @@
+import { UserError } from "@/server/errors";
 import "server-only";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
@@ -47,7 +48,7 @@ export async function workspaceAccess(
       and(eq(members.workspaceId, workspaceId), eq(members.userId, userId)),
     );
   if (!member || (write && !canWrite(member.role)))
-    throw new Error("Bu işlem için çalışma alanı yetkiniz yok.");
+    throw new UserError("Bu işlem için çalışma alanı yetkiniz yok.");
   return member;
 }
 export async function projectAccess(
@@ -236,7 +237,7 @@ export async function assertPlanningRefs(
         ),
       );
     if (found.length !== sprintIds.length)
-      throw new Error("Seçilen sprint bu projeye ait değil veya kapanmış.");
+      throw new UserError("Seçilen sprint bu projeye ait değil veya kapanmış.");
   }
   if (milestoneIds.length) {
     const found = await db
@@ -249,7 +250,7 @@ export async function assertPlanningRefs(
         ),
       );
     if (found.length !== milestoneIds.length)
-      throw new Error("Seçilen milestone bu projeye ait değil.");
+      throw new UserError("Seçilen milestone bu projeye ait değil.");
   }
 }
 // Sprints with live task statistics, newest first.
@@ -302,5 +303,5 @@ export async function assertAssignable(
     .where(
       and(eq(members.workspaceId, workspaceId), eq(members.userId, assigneeId)),
     );
-  if (!m) throw new Error("Atanan kişi bu çalışma alanının üyesi değil.");
+  if (!m) throw new UserError("Atanan kişi bu çalışma alanının üyesi değil.");
 }

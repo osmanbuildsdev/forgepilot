@@ -1,4 +1,5 @@
 "use client";
+import { unwrap, errorMessage, type ActionData } from "@/lib/action-result";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, X } from "lucide-react";
@@ -12,7 +13,7 @@ import {
 } from "@/server/tasks/actions";
 import { Button } from "@/components/ui/button";
 
-type Details = Awaited<ReturnType<typeof taskDetails>>;
+type Details = ActionData<typeof taskDetails>;
 
 export function TaskChecklist({
   projectId,
@@ -35,9 +36,9 @@ export function TaskChecklist({
 
   const load = useCallback(async () => {
     try {
-      setData(await taskDetails(projectId, taskId));
-    } catch {
-      setError("Görev ayrıntıları yüklenemedi.");
+      setData(await taskDetails(projectId, taskId).then(unwrap));
+    } catch (e) {
+      setError(errorMessage(e, "Görev ayrıntıları yüklenemedi."));
     }
   }, [projectId, taskId]);
 
@@ -55,7 +56,7 @@ export function TaskChecklist({
       router.refresh();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+      setError(errorMessage(e, "İşlem tamamlanamadı."));
       return false;
     } finally {
       setBusy(false);
@@ -102,7 +103,11 @@ export function TaskChecklist({
                   checked={s.done}
                   disabled={!canWrite || busy}
                   onChange={(e) =>
-                    run(() => setSubtaskDone(projectId, s.id, e.target.checked))
+                    run(() =>
+                      setSubtaskDone(projectId, s.id, e.target.checked).then(
+                        unwrap,
+                      ),
+                    )
                   }
                 />
                 <span className={s.done ? "done" : ""}>{s.title}</span>
@@ -113,7 +118,9 @@ export function TaskChecklist({
                   className="icon-button"
                   aria-label={`${s.title} alt görevini sil`}
                   disabled={busy}
-                  onClick={() => run(() => deleteSubtask(projectId, s.id))}
+                  onClick={() =>
+                    run(() => deleteSubtask(projectId, s.id).then(unwrap))
+                  }
                 >
                   <X size={13} />
                 </button>
@@ -127,7 +134,9 @@ export function TaskChecklist({
             style={{ gap: 6, marginTop: 6 }}
             onSubmit={async (e) => {
               e.preventDefault();
-              const ok = await run(() => addSubtask(projectId, taskId, title));
+              const ok = await run(() =>
+                addSubtask(projectId, taskId, title).then(unwrap),
+              );
               if (ok) setTitle("");
             }}
           >
@@ -179,7 +188,9 @@ export function TaskChecklist({
                     aria-label={`${projectKey}-${b.number} bağımlılığını kaldır`}
                     disabled={busy}
                     onClick={() =>
-                      run(() => removeDependency(projectId, taskId, b.id))
+                      run(() =>
+                        removeDependency(projectId, taskId, b.id).then(unwrap),
+                      )
                     }
                   >
                     <X size={13} />
@@ -196,7 +207,10 @@ export function TaskChecklist({
             disabled={busy}
             onChange={(e) => {
               const id = e.target.value;
-              if (id) void run(() => addDependency(projectId, taskId, id));
+              if (id)
+                void run(() =>
+                  addDependency(projectId, taskId, id).then(unwrap),
+                );
             }}
             style={{ height: 32, marginTop: 4 }}
           >
