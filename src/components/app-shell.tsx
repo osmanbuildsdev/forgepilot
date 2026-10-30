@@ -11,6 +11,7 @@ import {
   Inbox,
   FileText,
   GitBranch,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
@@ -31,6 +32,7 @@ const nav = [
   { href: "/app/projects", label: "Projeler", icon: FolderKanban, exact: true },
   { href: "/app/docs", label: "Dokümanlar", icon: FileText },
   { href: "/app/github", label: "GitHub", icon: GitBranch },
+  { href: "/app/copilot", label: "Copilot", icon: Sparkles },
   { href: "/app/settings/members", label: "Üyeler", icon: Users },
 ];
 
@@ -42,6 +44,7 @@ function crumbs(path: string, projects: ShellProject[]) {
     return ["Dokümanlar", "Şablonlar"];
   if (path.startsWith("/app/docs")) return ["Dokümanlar"];
   if (path.startsWith("/app/github")) return ["GitHub"];
+  if (path.startsWith("/app/copilot")) return ["Copilot"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new/ai")
     return ["Projeler", "Yeni proje", "AI ile"];

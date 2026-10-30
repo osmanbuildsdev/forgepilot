@@ -4,7 +4,7 @@ import { z } from "zod";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { subtasks, taskDependencies, tasks } from "@/server/db/schema";
+import { sprints, subtasks, taskDependencies, tasks } from "@/server/db/schema";
 import { recordActivity } from "@/server/activity";
 import { requireUser, projectAccess } from "@/server/projects/service";
 import { taskLinks } from "@/server/github/queries";
@@ -197,6 +197,83 @@ export async function removeDependency(
           eq(taskDependencies.dependsOnId, dependsOnId),
         ),
       );
+    revalidatePath("/app", "layout");
+  });
+}
+
+const priorityLabels = {
+  low: "Düşük",
+  medium: "Normal",
+  high: "Yüksek",
+  urgent: "Acil",
+} as const;
+
+// Single-field updates for callers that should not touch anything else
+// (for example confirmed Copilot suggestions).
+export async function setTaskPriority(
+  projectId: string,
+  taskId: string,
+  priority: unknown,
+) {
+  return attempt(async () => {
+    z.uuid().parse(taskId);
+    const value = z.enum(["low", "medium", "high", "urgent"]).parse(priority);
+    const user = await access(projectId, true);
+    const task = await taskInProject(projectId, taskId);
+    await db.transaction(async (tx) => {
+      await tx
+        .update(tasks)
+        .set({ priority: value, updatedAt: new Date() })
+        .where(eq(tasks.id, taskId));
+      await recordActivity(tx, {
+        projectId,
+        type: "task.updated",
+        actorId: user.id,
+        taskId,
+        message: `#${task.number} önceliği "${priorityLabels[value]}" yapıldı.`,
+        metadata: { priority: value },
+      });
+    });
+    revalidatePath("/app", "layout");
+  });
+}
+
+export async function setTaskSprint(
+  projectId: string,
+  taskId: string,
+  sprintId: string | null,
+) {
+  return attempt(async () => {
+    z.uuid().parse(taskId);
+    z.uuid().nullable().parse(sprintId);
+    const user = await access(projectId, true);
+    const task = await taskInProject(projectId, taskId);
+    let name = "";
+    if (sprintId) {
+      const [sprint] = await db
+        .select({ name: sprints.name, status: sprints.status })
+        .from(sprints)
+        .where(and(eq(sprints.id, sprintId), eq(sprints.projectId, projectId)));
+      if (!sprint || sprint.status === "completed")
+        throw new UserError("Sprint bulunamadı ya da kapanmış.");
+      name = sprint.name;
+    }
+    await db.transaction(async (tx) => {
+      await tx
+        .update(tasks)
+        .set({ sprintId, updatedAt: new Date() })
+        .where(eq(tasks.id, taskId));
+      await recordActivity(tx, {
+        projectId,
+        type: "task.updated",
+        actorId: user.id,
+        taskId,
+        message: sprintId
+          ? `#${task.number} ${name} sprintine eklendi.`
+          : `#${task.number} sprintten çıkarıldı.`,
+        metadata: { sprintId },
+      });
+    });
     revalidatePath("/app", "layout");
   });
 }

@@ -114,6 +114,12 @@ export function CommandPalette() {
         run: () => go("/app/projects/new/ai"),
       },
       {
+        id: "copilot",
+        title: "Copilot'a sor",
+        icon: <Sparkles size={15} />,
+        run: () => go("/app/copilot"),
+      },
+      {
         id: "home",
         title: "Genel bakış",
         icon: <LayoutDashboard size={15} />,

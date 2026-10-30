@@ -15,6 +15,7 @@ import {
   type DocAction,
   type SectionDraft,
 } from "@/features/ai/doc-schema";
+import { copilotReply, type CopilotReply } from "@/features/ai/copilot-schema";
 
 export interface AIProvider {
   readonly model: string;
@@ -27,6 +28,7 @@ export interface AIProvider {
   generateProjectPlan(request: PlanRequest): Promise<ProjectPlan>;
   summarizeActivity(facts: unknown): Promise<BriefNarrative>;
   writeSections(request: SectionRequest): Promise<SectionDraft>;
+  answerCopilot(request: CopilotRequest): Promise<CopilotReply>;
 }
 
 const DATA_ONLY =
@@ -132,7 +134,29 @@ export class GeminiProvider implements AIProvider {
       90000,
     );
   }
+
+  answerCopilot(request: CopilotRequest) {
+    return this.structured(
+      copilotReply,
+      [
+        "You are the project copilot inside a project management tool. Answer in the language of the question (usually Turkish), concisely, in Markdown.",
+        DATA_ONLY,
+        "Base every statement on `context`. If the data does not answer the question, say what is missing instead of guessing. Never invent tasks, people, numbers, dates, pull requests or completed work.",
+        'Refer to tasks by key (e.g. FORGE-24). In `references`, list the tasks (ref = number only, e.g. "24"), pull requests (number), milestones or sprints (name) your answer relies on.',
+        'Use `actions` only when a concrete next step helps: create_task (title, description with acceptance criteria, priority), update_priority (taskNumber, priority), add_to_sprint (taskNumber, sprintName of a planned or active sprint), open_task (taskNumber). Set unused fields to empty strings, -1 or "medium". Actions are proposals; the user confirms them.',
+        "`history` is the earlier conversation for context only.",
+      ].join(" "),
+      request,
+      60000,
+    );
+  }
 }
+
+export type CopilotRequest = {
+  question: string;
+  history: { role: "user" | "assistant"; content: string }[];
+  context: unknown;
+};
 
 export type SectionRequest = {
   action: DocAction;
