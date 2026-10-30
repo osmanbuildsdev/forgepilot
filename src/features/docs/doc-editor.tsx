@@ -2,8 +2,9 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, History, Trash2 } from "lucide-react";
+import { Download, History, LayoutTemplate, Trash2 } from "lucide-react";
 import { saveDocument, deleteDocument } from "@/server/docs/actions";
+import { saveDocumentAsTemplate } from "@/server/docs/template-actions";
 import { unwrap, errorMessage } from "@/lib/action-result";
 import { parseMarkdown, renderMarkdown, headingAnchor } from "./markdown";
 import { Button } from "@/components/ui/button";
@@ -208,6 +209,31 @@ export function DocEditor({
               </>
             )}
           </dl>
+          {canWrite && (
+            <button
+              className="link-button"
+              style={{
+                justifySelf: "start",
+                display: "inline-flex",
+                gap: 4,
+                alignItems: "center",
+              }}
+              onClick={async () => {
+                const name = window.prompt("Şablon adı", title);
+                if (!name?.trim()) return;
+                try {
+                  await saveDocumentAsTemplate(projectId, doc.id, {
+                    name,
+                  }).then(unwrap);
+                  setStatus("Şablon olarak kaydedildi");
+                } catch (e) {
+                  setError(errorMessage(e, "Şablon kaydedilemedi."));
+                }
+              }}
+            >
+              <LayoutTemplate size={12} /> Şablon olarak kaydet
+            </button>
+          )}
           {canWrite && (
             <button
               className="link-button danger-link"

@@ -36,6 +36,8 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path === "/app") return ["Genel bakış"];
   if (path.startsWith("/app/tasks")) return ["Görevlerim"];
   if (path.startsWith("/app/inbox")) return ["Gelen kutusu"];
+  if (path.startsWith("/app/docs/templates"))
+    return ["Dokümanlar", "Şablonlar"];
   if (path.startsWith("/app/docs")) return ["Dokümanlar"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new/ai")

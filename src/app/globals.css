@@ -1559,6 +1559,31 @@ select:focus {
   font-size: 11px;
   padding: 2px 12px !important;
 }
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.template-card {
+  display: grid;
+  gap: 12px;
+  align-content: space-between;
+  padding: 18px;
+}
+.template-card .muted {
+  font-size: 13px;
+  margin-top: 4px;
+}
+.doc-list li.template-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+}
+.doc-list li.template-row .subtle {
+  font-size: 12px;
+}
 .history-layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);

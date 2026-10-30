@@ -438,6 +438,8 @@ export const documents = pgTable(
     structure: jsonb("structure").notNull(),
     sourceType: documentSourceEnum("source_type").default("manual").notNull(),
     sourceFilename: text("source_filename"),
+    // "builtin:<id>" or a document_templates id when created from a template.
+    templateRef: text("template_ref"),
     currentVersion: integer("current_version").default(1).notNull(),
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
@@ -451,6 +453,28 @@ export const documents = pgTable(
     index("document_project_updated").on(t.projectId, t.updatedAt),
     index("document_workspace").on(t.workspaceId),
   ],
+);
+// Workspace templates. Built-in ones live in code and are copied here when
+// duplicated, so every editable template is a real row.
+export const documentTemplates = pgTable(
+  "document_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description").default("").notNull(),
+    contentMarkdown: text("content_markdown").notNull(),
+    parsedStructure: jsonb("parsed_structure").notNull(),
+    // Built-in template id or document id it was created from, if any.
+    origin: text("origin"),
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    ...dates(),
+  },
+  (t) => [index("template_workspace").on(t.workspaceId, t.name)],
 );
 export const documentVersions = pgTable(
   "document_versions",
@@ -506,3 +530,4 @@ export type Label = typeof labels.$inferSelect;
 export type Sprint = typeof sprints.$inferSelect;
 export type Milestone = typeof milestones.$inferSelect;
 export type Document = typeof documents.$inferSelect;
+export type DocumentTemplate = typeof documentTemplates.$inferSelect;

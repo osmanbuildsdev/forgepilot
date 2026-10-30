@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FileText } from "lucide-react";
+import Link from "next/link";
+import { FileText, LayoutTemplate } from "lucide-react";
 import { requireUser } from "@/server/projects/service";
 import { userDocuments } from "@/server/docs/queries";
 import { DocsBrowser } from "@/features/docs/docs-browser";
@@ -19,6 +20,9 @@ export default async function Page() {
             eklemek için bir projenin Dokümanlar sekmesini kullan.
           </p>
         </div>
+        <Link href="/app/docs/templates" className="button outline">
+          <LayoutTemplate size={15} /> Şablonlar
+        </Link>
       </header>
       {items.length ? (
         <DocsBrowser items={items} />

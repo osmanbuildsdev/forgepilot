@@ -1,7 +1,8 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FilePlus, Upload } from "lucide-react";
+import Link from "next/link";
+import { FilePlus, LayoutTemplate, Upload } from "lucide-react";
 import { createDocument, importMarkdown } from "@/server/docs/actions";
 import { unwrap, errorMessage, ActionError } from "@/lib/action-result";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,11 @@ export function DocsToolbar({ projectId }: { projectId: string }) {
           </span>
         </span>
         <span className="row" style={{ gap: 6, marginLeft: "auto" }}>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/app/docs/templates?project=${projectId}`}>
+              <LayoutTemplate size={14} /> Şablondan
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"
