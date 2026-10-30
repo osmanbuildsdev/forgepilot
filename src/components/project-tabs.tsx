@@ -1,22 +1,30 @@
 import Link from "next/link";
+
+const tabs = [
+  ["", "Genel bakış"],
+  ["/board", "Kanban"],
+  ["/settings", "Ayarlar"],
+] as const;
+
 export function ProjectTabs({
   id,
-  board = false,
+  active,
 }: {
   id: string;
-  board?: boolean;
+  active: (typeof tabs)[number][0];
 }) {
   return (
-    <nav className="tabs">
-      <Link href={`/app/projects/${id}`} className={!board ? "active" : ""}>
-        Genel bakış
-      </Link>
-      <Link
-        href={`/app/projects/${id}/board`}
-        className={board ? "active" : ""}
-      >
-        Kanban
-      </Link>
+    <nav className="tabs" aria-label="Proje sekmeleri">
+      {tabs.map(([suffix, label]) => (
+        <Link
+          key={suffix}
+          href={`/app/projects/${id}${suffix}`}
+          className={active === suffix ? "active" : ""}
+          aria-current={active === suffix ? "page" : undefined}
+        >
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 }

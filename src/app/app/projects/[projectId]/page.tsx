@@ -29,7 +29,7 @@ export default async function Page({
           <Link href={`/app/projects/${project.id}/board`}>Kanban’ı aç →</Link>
         </Button>
       </header>
-      <ProjectTabs id={project.id} />
+      <ProjectTabs id={project.id} active="" />
       <div className="stack">
         <div className="stats">
           <div className="panel stat">

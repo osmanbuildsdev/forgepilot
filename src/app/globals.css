@@ -215,6 +215,16 @@ kbd,
   background: var(--surface-2);
   color: var(--fg);
 }
+.button.danger {
+  background: var(--danger);
+  color: #fff;
+}
+.button.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+.danger-zone {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
 .text-link {
   color: var(--accent);
   font-weight: 500;

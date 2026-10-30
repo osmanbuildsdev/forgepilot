@@ -31,7 +31,7 @@ export default async function Page({
           <p className="muted">Net öncelikler. Görünür ilerleme.</p>
         </div>
       </header>
-      <ProjectTabs id={projectId} board />
+      <ProjectTabs id={projectId} active="/board" />
       <Board
         projectId={projectId}
         projectKey={data.project.key}

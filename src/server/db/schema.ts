@@ -190,6 +190,7 @@ export const ACTIVITY_TYPES = [
   "task.deleted",
   "label.created",
   "comment.created",
+  "project.updated",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 export const ACTIVITY_SOURCES = ["user", "ai", "github", "system"] as const;

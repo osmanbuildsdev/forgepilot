@@ -28,10 +28,11 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path.startsWith("/app/tasks")) return ["Görevlerim"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
-  const match = path.match(/^\/app\/projects\/([^/]+)(\/board)?/);
+  const match = path.match(/^\/app\/projects\/([^/]+)(?:\/(board|settings))?/);
   if (match) {
     const p = projects.find((x) => x.id === match[1]);
-    return ["Projeler", p?.name ?? "Proje", ...(match[2] ? ["Kanban"] : [])];
+    const sub = { board: "Kanban", settings: "Ayarlar" }[match[2] ?? ""];
+    return ["Projeler", p?.name ?? "Proje", ...(sub ? [sub] : [])];
   }
   return ["Projeler"];
 }
