@@ -13,7 +13,10 @@ export type NotificationInput = {
     | "comment.added"
     | "sprint.started"
     | "member.joined"
-    | "task.completion_suggested";
+    | "task.completion_suggested"
+    | "task.due_soon"
+    | "task.overdue"
+    | "sprint.ending";
   title: string;
   body?: string;
   href: string;

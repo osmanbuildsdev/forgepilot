@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   if (!row) return Response.json({ duplicate: true });
 
   try {
-    await enqueue("github.event", { eventId: row.id });
+    await enqueue("github.event", { eventId: row.id }, { jobId: row.id });
   } catch {
     // The failure is recorded on the event row and can be retried; GitHub
     // does not need to redeliver.

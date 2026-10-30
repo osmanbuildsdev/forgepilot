@@ -67,7 +67,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] İmzalı (HMAC-SHA256) ve idempotent webhook, ham olay kaydı ve hata durumu
 - [x] Commit, PR ve check kaydı; commit mesajı, PR başlığı/açıklaması ve dal adındaki görev anahtarlarıyla eşleme; birleşen PR için onay bekleyen tamamlanma önerisi
 - [x] GitHub arayüzü: bağlantı sayfası ve kurulum rehberi, repo-proje bağlama, proje GitHub sekmesi (commit, PR, check durumu), görev panelinde commit/PR ve tamamlanma önerisi onayı
-- [ ] Redis + BullMQ worker
+- [x] Redis + BullMQ kuyruğu ve worker (`npm run worker`); Redis yoksa işler anında çalışır
+- [x] Zamanlanmış işler: son tarih yaklaşıyor / gecikti / sprint bitiyor bildirimleri, günlük sağlık kaydı, başarısız GitHub olaylarını yeniden deneme; Redis olmadan `/api/cron/<iş>` (CRON_SECRET)
 
 ### Analiz ve ürün
 - [x] Algoritmik proje sağlık skoru (6 açıklanabilir faktör, günlük anlık görüntü, mini grafik)
@@ -110,3 +111,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | GitHub arayüzü | Gerçek GitHub App ile henüz denenmedi; yerelde webhook için tünel gerekir |
 | 2026-10-30 | Copilot | AI'ın uydurduğu görev, sprint veya PR referansları sunucuda düşürülür; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | AI sprint planlama ve GitHub geliştirme özeti | Kapasite AI'a hesaplatılmaz; canlı Gemini ile henüz denenmedi |
+| 2026-10-30 | Arka plan işleri ve zamanlanmış bildirimler | Worker Next.js dışında çalışacak şekilde ayrıldı; gerçek Redis ile henüz denenmedi |

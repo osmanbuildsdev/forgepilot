@@ -8,7 +8,10 @@ import {
   taskDependencies,
   tasks,
 } from "@/server/db/schema";
-import { milestoneOverview, sprintOverview } from "@/server/projects/service";
+import {
+  milestoneOverview,
+  sprintOverview,
+} from "@/server/projects/planning-queries";
 import { computeHealth, type Health } from "@/features/health/score";
 
 const isoDay = (d = new Date()) => d.toISOString().slice(0, 10);
