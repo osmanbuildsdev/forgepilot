@@ -66,7 +66,9 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Ctrl+K komut paleti ve arama
 - [ ] Raporlar ve grafikler
 - [ ] Ayarlar sayfaları, pricing, forgot-password
-- [ ] Gerçek landing sayfası (parallax, bölümler, footer)
+- [x] Landing sayfası yeniden tasarlandı (ürün önizlemesi, parallax, özellikler, iş akışı, GitHub, fiyatlandırma, footer)
+- [x] Tasarım sistemi: renk tokenları, Geist fontu, açık/koyu tema, ortak bileşen stilleri
+- [x] Giriş ve kayıt sayfaları yeniden tasarlandı
 - [ ] Erişilebilirlik, mobil, reduced-motion
 
 ## Görev günlüğü
@@ -78,3 +80,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Görevlere atama, son tarih ve tahmin puanı eklendi | Migration 0002; atanan kişi çalışma alanı üyesi olmak zorunda |
 | 2026-10-30 | Etiket sistemi eklendi | Migration 0003; labels ve task_labels tabloları |
 | 2026-10-30 | Üye daveti ve rol yönetimi eklendi | Migration 0004; /app/settings/members ve /invite/[token]; davet bağlantısı elle iletilir |
+| 2026-10-30 | Tasarım sistemi, landing, giriş ve kayıt sayfaları yenilendi | Gradyan yok, tek vurgu rengi; henüz olmayan özellikler "Yakında" olarak işaretli |

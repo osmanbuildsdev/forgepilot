@@ -24,9 +24,9 @@ export default async function Page({
   if (!user) redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
   const invite = token.length <= 100 ? await invitePreview(token) : null;
   return (
-    <main className="auth-page">
-      <section className="auth-form">
-        <div className="auth-box">
+    <main className="center-page">
+      <section className="panel center-card">
+        <div>
           <Logo />
           {invite ? (
             <>

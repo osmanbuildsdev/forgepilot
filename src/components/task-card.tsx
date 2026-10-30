@@ -1,4 +1,12 @@
 import type { Task, Label } from "@/server/db/schema";
+
+export const priorityLabels: Record<Task["priority"], string> = {
+  low: "Düşük",
+  medium: "Normal",
+  high: "Yüksek",
+  urgent: "Acil",
+};
+
 export function TaskCardContent({
   task,
   projectKey,
@@ -9,7 +17,7 @@ export function TaskCardContent({
     Partial<Pick<Task, "dueDate" | "estimatePoints">>;
   projectKey: string;
   assignee?: string;
-  labels?: Label[];
+  labels?: Pick<Label, "id" | "name" | "color">[];
 }) {
   return (
     <>
@@ -18,24 +26,26 @@ export function TaskCardContent({
       </span>
       <h3>{task.title}</h3>
       {labels.length > 0 && (
-        <div className="row" style={{ gap: 4, flexWrap: "wrap" }}>
+        <div
+          className="row"
+          style={{ gap: 4, flexWrap: "wrap", marginBottom: 10 }}
+        >
           {labels.map((l) => (
-            <span
-              key={l.id}
-              className="badge"
-              style={{ borderColor: l.color, color: l.color }}
-            >
+            <span key={l.id} className="badge">
+              <span className="dot" style={{ color: l.color }} />
               {l.name}
             </span>
           ))}
         </div>
       )}
       <div className="row between">
-        <span className={`priority ${task.priority}`}>{task.priority}</span>
+        <span className={`priority ${task.priority}`}>
+          {priorityLabels[task.priority]}
+        </span>
         <span className="row" style={{ gap: 6 }}>
           {task.estimatePoints != null && (
-            <span className="badge" title="Tahmini puan">
-              {task.estimatePoints} p
+            <span className="badge mono" title="Tahmini puan">
+              {task.estimatePoints}p
             </span>
           )}
           {task.dueDate && (
