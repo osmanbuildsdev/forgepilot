@@ -255,6 +255,9 @@ export const ACTIVITY_TYPES = [
   "project.updated",
   "document.created",
   "document.updated",
+  "github.commit",
+  "github.pull_request",
+  "github.suggestion",
   "sprint.started",
   "sprint.completed",
   "milestone.created",
@@ -496,6 +499,181 @@ export const documentVersions = pgTable(
   },
   (t) => [
     uniqueIndex("document_version_number").on(t.documentId, t.versionNumber),
+  ],
+);
+// --- GitHub -----------------------------------------------------------------
+// GitHub ids are stored as bigint numbers; they fit in JS safe integers.
+export const githubInstallations = pgTable("github_installations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  installationId: bigint("installation_id", { mode: "number" })
+    .notNull()
+    .unique(),
+  accountLogin: text("account_login").notNull(),
+  accountType: text("account_type").notNull(),
+  // Bound after a workspace admin finishes the install flow.
+  workspaceId: uuid("workspace_id").references(() => workspaces.id, {
+    onDelete: "set null",
+  }),
+  connectedBy: text("connected_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  ...dates(),
+});
+export const githubRepositories = pgTable(
+  "github_repositories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    installationId: uuid("installation_id")
+      .notNull()
+      .references(() => githubInstallations.id, { onDelete: "cascade" }),
+    githubId: bigint("github_id", { mode: "number" }).notNull().unique(),
+    fullName: text("full_name").notNull(),
+    defaultBranch: text("default_branch"),
+    private: boolean("private").default(false).notNull(),
+    htmlUrl: text("html_url").notNull(),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }),
+    // Set when access is removed from the installation; rows are kept for history.
+    removedAt: timestamp("removed_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [index("repo_installation").on(t.installationId)],
+);
+export const projectRepositories = pgTable(
+  "project_repositories",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    repositoryId: uuid("repository_id")
+      .notNull()
+      .references(() => githubRepositories.id, { onDelete: "cascade" }),
+    connectedBy: text("connected_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.repositoryId] }),
+    index("project_repo_repo").on(t.repositoryId),
+  ],
+);
+export const githubCommits = pgTable(
+  "github_commits",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    repositoryId: uuid("repository_id")
+      .notNull()
+      .references(() => githubRepositories.id, { onDelete: "cascade" }),
+    sha: text("sha").notNull(),
+    message: text("message").notNull(),
+    authorName: text("author_name"),
+    authorLogin: text("author_login"),
+    branch: text("branch"),
+    url: text("url").notNull(),
+    committedAt: timestamp("committed_at", { withTimezone: true }).notNull(),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("commit_repo_sha").on(t.repositoryId, t.sha),
+    index("commit_repo_date").on(t.repositoryId, t.committedAt),
+  ],
+);
+export const pullRequestState = pgEnum("pull_request_state", [
+  "open",
+  "closed",
+  "merged",
+]);
+export const githubPullRequests = pgTable(
+  "github_pull_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    repositoryId: uuid("repository_id")
+      .notNull()
+      .references(() => githubRepositories.id, { onDelete: "cascade" }),
+    number: integer("number").notNull(),
+    title: text("title").notNull(),
+    body: text("body").default("").notNull(),
+    state: pullRequestState("state").notNull(),
+    draft: boolean("draft").default(false).notNull(),
+    authorLogin: text("author_login"),
+    url: text("url").notNull(),
+    headRef: text("head_ref"),
+    headSha: text("head_sha"),
+    // Latest check result for the head commit: success, failure, pending…
+    checkStatus: text("check_status"),
+    openedAt: timestamp("opened_at", { withTimezone: true }).notNull(),
+    mergedAt: timestamp("merged_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("pr_repo_number").on(t.repositoryId, t.number),
+    index("pr_head_sha").on(t.headSha),
+  ],
+);
+export const githubEventStatus = pgEnum("github_event_status", [
+  "received",
+  "processed",
+  "ignored",
+  "failed",
+]);
+// Raw webhook deliveries. The delivery id makes processing idempotent.
+export const githubEvents = pgTable(
+  "github_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    deliveryId: text("delivery_id").notNull().unique(),
+    event: text("event").notNull(),
+    action: text("action"),
+    installationId: bigint("installation_id", { mode: "number" }),
+    repositoryGithubId: bigint("repository_github_id", { mode: "number" }),
+    payload: jsonb("payload").notNull(),
+    status: githubEventStatus("status").default("received").notNull(),
+    error: text("error"),
+    attempts: integer("attempts").default(0).notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [index("github_event_status").on(t.status, t.createdAt)],
+);
+export const githubLinkKind = pgEnum("github_link_kind", [
+  "commit",
+  "pull_request",
+]);
+// "pending" means GitHub activity suggests the task may be done; a person
+// confirms or dismisses it. Tasks are never closed automatically.
+export const completionSuggestion = pgEnum("completion_suggestion", [
+  "none",
+  "pending",
+  "confirmed",
+  "dismissed",
+]);
+export const taskGithubLinks = pgTable(
+  "task_github_links",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    repositoryId: uuid("repository_id")
+      .notNull()
+      .references(() => githubRepositories.id, { onDelete: "cascade" }),
+    kind: githubLinkKind("kind").notNull(),
+    // Commit sha or pull request number.
+    ref: text("ref").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    state: text("state"),
+    suggestion: completionSuggestion("suggestion").default("none").notNull(),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("task_link_unique").on(t.taskId, t.repositoryId, t.kind, t.ref),
+    index("task_link_task").on(t.taskId),
   ],
 );
 export const workspaceInvitations = pgTable(

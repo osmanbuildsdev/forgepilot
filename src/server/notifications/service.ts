@@ -8,7 +8,12 @@ type Executor = Pick<typeof db, "insert">;
 export type NotificationInput = {
   userId: string;
   actorId: string | null;
-  type: "task.assigned" | "comment.added" | "sprint.started" | "member.joined";
+  type:
+    | "task.assigned"
+    | "comment.added"
+    | "sprint.started"
+    | "member.joined"
+    | "task.completion_suggested";
   title: string;
   body?: string;
   href: string;
