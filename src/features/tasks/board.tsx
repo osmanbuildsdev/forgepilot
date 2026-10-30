@@ -25,6 +25,7 @@ import { generateTaskDraft } from "@/server/ai/actions";
 import { TaskCardContent } from "@/components/task-card";
 import { Modal } from "@/components/modal";
 import { TaskComments } from "./task-comments";
+import { TaskChecklist } from "./task-checklist";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { generatedTasks } from "./schemas";
@@ -41,6 +42,8 @@ function Card({
   projectKey,
   assignee,
   labels,
+  checklist,
+  blocked,
   onEdit,
   disabled,
 }: {
@@ -48,6 +51,8 @@ function Card({
   projectKey: string;
   assignee?: string;
   labels: Label[];
+  checklist?: { done: number; total: number };
+  blocked?: number;
   onEdit: () => void;
   disabled: boolean;
 }) {
@@ -64,25 +69,22 @@ function Card({
         position: "relative",
       }}
     >
-      <div className="row between">
-        <span className="muted" style={{ fontSize: 10 }}>
-          GÖREV
-        </span>
-        <button
-          className="drag-handle"
-          aria-label={`${task.title} görevini taşı`}
-          {...listeners}
-          {...attributes}
-        >
-          <GripVertical size={16} />
-        </button>
-      </div>
+      <button
+        className="drag-handle"
+        aria-label={`${task.title} görevini taşı`}
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical size={14} />
+      </button>
       <button className="task-open" onClick={onEdit}>
         <TaskCardContent
           task={task}
           projectKey={projectKey}
           assignee={assignee}
           labels={labels}
+          checklist={checklist}
+          blocked={blocked}
         />
       </button>
     </article>
@@ -117,6 +119,8 @@ export function Board({
   members,
   labels,
   labelIdsByTask,
+  subtaskProgress,
+  blockedBy,
   editable,
   aiEnabled,
   viewer,
@@ -127,6 +131,8 @@ export function Board({
   members: { id: string; name: string }[];
   labels: Label[];
   labelIdsByTask: Record<string, string[]>;
+  subtaskProgress: Record<string, { done: number; total: number }>;
+  blockedBy: Record<string, number>;
   editable: boolean;
   aiEnabled: boolean;
   viewer: { id: string; canModerate: boolean };
@@ -250,6 +256,8 @@ export function Board({
                     labels={labels.filter((l) =>
                       labelIdsByTask[t.id]?.includes(l.id),
                     )}
+                    checklist={subtaskProgress[t.id]}
+                    blocked={blockedBy[t.id]}
                     onEdit={() => {
                       setError("");
                       setEditing(t);
@@ -444,6 +452,16 @@ export function Board({
               </div>
             )}
           </form>
+          {editing !== "new" && (
+            <TaskChecklist
+              key={`checklist-${editing.id}`}
+              projectId={projectId}
+              projectKey={projectKey}
+              taskId={editing.id}
+              candidates={tasks}
+              canWrite={editable}
+            />
+          )}
           {editing !== "new" && (
             <TaskComments
               key={editing.id}

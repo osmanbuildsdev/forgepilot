@@ -34,7 +34,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Görev alanları: atama, son tarih, tahmin puanı (öncelik zaten vardı)
 - [x] Etiketler (proje bazlı, görev başına çoklu seçim)
 - [x] Yorumlar (ekle, düzenle, sil; yöneticiler moderasyon yapabilir) ve sağdan açılan görev paneli
-- [ ] Alt görevler, bağımlılıklar, eklentiler
+- [x] Alt görevler (kontrol listesi) ve görev bağımlılıkları (döngü kontrolü, kartta "Engelli" rozeti)
+- [ ] Dosya ekleri
 - [ ] Özel Kanban kolonları
 - [ ] Proje düzenleme / silme
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
@@ -86,3 +87,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Tasarım sistemi, landing, giriş ve kayıt sayfaları yenilendi | Gradyan yok, tek vurgu rengi; henüz olmayan özellikler "Yakında" olarak işaretli |
 | 2026-10-30 | Uygulama içi arayüz yeni tasarıma geçirildi | Dashboard gerçek sayımlar gösteriyor; /app/tasks eklendi |
 | 2026-10-30 | Görev yorumları ve görev detay paneli | Migration 0005; yorumlar aktivite geçmişine yazılır |
+| 2026-10-30 | Alt görevler ve görev bağımlılıkları | Migration 0006; döngüler sunucuda engellenir |

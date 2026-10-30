@@ -13,6 +13,8 @@ import {
   user,
   labels,
   taskLabels,
+  subtasks,
+  taskDependencies,
 } from "@/server/db/schema";
 import { canWrite } from "@/server/permissions";
 export function configured() {
@@ -126,29 +128,50 @@ export async function myOpenTasks(userId: string, limit = 50) {
 }
 export async function projectData(projectId: string, userId: string) {
   const project = await projectAccess(projectId, userId);
-  const [items, events, projectLabels, links] = await Promise.all([
-    db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.projectId, projectId))
-      .orderBy(tasks.number),
-    db
-      .select()
-      .from(activities)
-      .where(eq(activities.projectId, projectId))
-      .orderBy(desc(activities.createdAt))
-      .limit(15),
-    db
-      .select()
-      .from(labels)
-      .where(eq(labels.projectId, projectId))
-      .orderBy(labels.name),
-    db
-      .select({ taskId: taskLabels.taskId, labelId: taskLabels.labelId })
-      .from(taskLabels)
-      .innerJoin(tasks, eq(tasks.id, taskLabels.taskId))
-      .where(eq(tasks.projectId, projectId)),
-  ]);
+  const [items, events, projectLabels, links, checklist, blockers] =
+    await Promise.all([
+      db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.projectId, projectId))
+        .orderBy(tasks.number),
+      db
+        .select()
+        .from(activities)
+        .where(eq(activities.projectId, projectId))
+        .orderBy(desc(activities.createdAt))
+        .limit(15),
+      db
+        .select()
+        .from(labels)
+        .where(eq(labels.projectId, projectId))
+        .orderBy(labels.name),
+      db
+        .select({ taskId: taskLabels.taskId, labelId: taskLabels.labelId })
+        .from(taskLabels)
+        .innerJoin(tasks, eq(tasks.id, taskLabels.taskId))
+        .where(eq(tasks.projectId, projectId)),
+      db
+        .select({
+          taskId: subtasks.taskId,
+          total: sql<number>`count(*)::int`,
+          done: sql<number>`count(*) filter (where ${subtasks.done})::int`,
+        })
+        .from(subtasks)
+        .innerJoin(tasks, eq(tasks.id, subtasks.taskId))
+        .where(eq(tasks.projectId, projectId))
+        .groupBy(subtasks.taskId),
+      // Dependencies whose blocking task is not finished yet.
+      db
+        .select({
+          taskId: taskDependencies.taskId,
+          open: sql<number>`count(*)::int`,
+        })
+        .from(taskDependencies)
+        .innerJoin(tasks, eq(tasks.id, taskDependencies.dependsOnId))
+        .where(and(eq(tasks.projectId, projectId), ne(tasks.status, "done")))
+        .groupBy(taskDependencies.taskId),
+    ]);
   const labelIdsByTask: Record<string, string[]> = {};
   for (const l of links) (labelIdsByTask[l.taskId] ??= []).push(l.labelId);
   return {
@@ -157,6 +180,12 @@ export async function projectData(projectId: string, userId: string) {
     events,
     labels: projectLabels,
     labelIdsByTask,
+    subtaskProgress: Object.fromEntries(
+      checklist.map((c) => [c.taskId, { done: c.done, total: c.total }]),
+    ) as Record<string, { done: number; total: number }>,
+    blockedBy: Object.fromEntries(
+      blockers.map((b) => [b.taskId, b.open]),
+    ) as Record<string, number>,
   };
 }
 export async function workspaceMembers(workspaceId: string) {

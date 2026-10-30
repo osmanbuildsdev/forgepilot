@@ -39,6 +39,8 @@ export default async function Page({
         members={people}
         labels={data.labels}
         labelIdsByTask={data.labelIdsByTask}
+        subtaskProgress={data.subtaskProgress}
+        blockedBy={data.blockedBy}
         editable={canWrite(member.role)}
         aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
         viewer={{ id: user.id, canModerate: canManageMembers(member.role) }}

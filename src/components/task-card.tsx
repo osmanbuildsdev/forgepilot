@@ -1,3 +1,4 @@
+import { ListChecks, Lock } from "lucide-react";
 import type { Task, Label } from "@/server/db/schema";
 
 export const priorityLabels: Record<Task["priority"], string> = {
@@ -12,12 +13,16 @@ export function TaskCardContent({
   projectKey,
   assignee,
   labels = [],
+  checklist,
+  blocked = 0,
 }: {
   task: Pick<Task, "number" | "title" | "priority"> &
     Partial<Pick<Task, "dueDate" | "estimatePoints">>;
   projectKey: string;
   assignee?: string;
   labels?: Pick<Label, "id" | "name" | "color">[];
+  checklist?: { done: number; total: number };
+  blocked?: number;
 }) {
   return (
     <>
@@ -43,6 +48,19 @@ export function TaskCardContent({
           {priorityLabels[task.priority]}
         </span>
         <span className="row" style={{ gap: 6 }}>
+          {blocked > 0 && (
+            <span
+              className="badge blocked"
+              title={`${blocked} açık görevi bekliyor`}
+            >
+              <Lock size={10} /> Engelli
+            </span>
+          )}
+          {checklist && checklist.total > 0 && (
+            <span className="badge" title="Alt görevler">
+              <ListChecks size={11} /> {checklist.done}/{checklist.total}
+            </span>
+          )}
           {task.estimatePoints != null && (
             <span className="badge mono" title="Tahmini puan">
               {task.estimatePoints}p

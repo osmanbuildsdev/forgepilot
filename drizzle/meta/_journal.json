@@ -43,6 +43,13 @@
       "when": 1793380489700,
       "tag": "0005_task_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793380681445,
+      "tag": "0006_subtasks_dependencies",
+      "breakpoints": true
     }
   ]
 }

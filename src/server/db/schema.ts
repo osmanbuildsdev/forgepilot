@@ -222,6 +222,39 @@ export const activities = pgTable(
     index("activity_project_type").on(t.projectId, t.type),
   ],
 );
+export const subtasks = pgTable(
+  "subtasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    done: boolean("done").default(false).notNull(),
+    position: integer("position").default(0).notNull(),
+    ...dates(),
+  },
+  (t) => [index("subtask_task").on(t.taskId, t.position)],
+);
+// "taskId cannot finish before dependsOnId is done." Both tasks share a project.
+export const taskDependencies = pgTable(
+  "task_dependencies",
+  {
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    dependsOnId: uuid("depends_on_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.taskId, t.dependsOnId] }),
+    index("dependency_depends_on").on(t.dependsOnId),
+  ],
+);
 export const taskComments = pgTable(
   "task_comments",
   {
