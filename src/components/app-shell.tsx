@@ -9,6 +9,7 @@ import {
   CircleCheck,
   Plus,
   Inbox,
+  FileText,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
@@ -27,6 +28,7 @@ const nav = [
   { href: "/app/tasks", label: "Görevlerim", icon: CircleCheck },
   { href: "/app/inbox", label: "Gelen kutusu", icon: Inbox },
   { href: "/app/projects", label: "Projeler", icon: FolderKanban, exact: true },
+  { href: "/app/docs", label: "Dokümanlar", icon: FileText },
   { href: "/app/settings/members", label: "Üyeler", icon: Users },
 ];
 
@@ -34,12 +36,13 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path === "/app") return ["Genel bakış"];
   if (path.startsWith("/app/tasks")) return ["Görevlerim"];
   if (path.startsWith("/app/inbox")) return ["Gelen kutusu"];
+  if (path.startsWith("/app/docs")) return ["Dokümanlar"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new/ai")
     return ["Projeler", "Yeni proje", "AI ile"];
   if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
   const match = path.match(
-    /^\/app\/projects\/([^/]+)(?:\/(board|sprints|roadmap|settings))?/,
+    /^\/app\/projects\/([^/]+)(?:\/(board|sprints|roadmap|docs|settings))?/,
   );
   if (match) {
     const p = projects.find((x) => x.id === match[1]);
@@ -47,6 +50,7 @@ function crumbs(path: string, projects: ShellProject[]) {
       board: "Kanban",
       sprints: "Sprintler",
       roadmap: "Yol haritası",
+      docs: "Dokümanlar",
       settings: "Ayarlar",
     }[match[2] ?? ""];
     return ["Projeler", p?.name ?? "Proje", ...(sub ? [sub] : [])];

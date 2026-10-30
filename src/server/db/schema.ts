@@ -253,6 +253,8 @@ export const ACTIVITY_TYPES = [
   "comment.created",
   "project.created",
   "project.updated",
+  "document.created",
+  "document.updated",
   "sprint.started",
   "sprint.completed",
   "milestone.created",
@@ -414,6 +416,64 @@ export const notifications = pgTable(
       .where(sql`${t.readAt} is null`),
   ],
 );
+export const documentSourceEnum = pgEnum("document_source", [
+  "manual",
+  "markdown_import",
+  "ai_generated",
+  "template_generated",
+]);
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    contentMarkdown: text("content_markdown").default("").notNull(),
+    // Parsed headings, frontmatter and references, refreshed on every save.
+    structure: jsonb("structure").notNull(),
+    sourceType: documentSourceEnum("source_type").default("manual").notNull(),
+    sourceFilename: text("source_filename"),
+    currentVersion: integer("current_version").default(1).notNull(),
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    updatedBy: text("updated_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    ...dates(),
+  },
+  (t) => [
+    index("document_project_updated").on(t.projectId, t.updatedAt),
+    index("document_workspace").on(t.workspaceId),
+  ],
+);
+export const documentVersions = pgTable(
+  "document_versions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    title: text("title").notNull(),
+    contentMarkdown: text("content_markdown").notNull(),
+    note: text("note").default("").notNull(),
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("document_version_number").on(t.documentId, t.versionNumber),
+  ],
+);
 export const workspaceInvitations = pgTable(
   "workspace_invitations",
   {
@@ -445,3 +505,4 @@ export type Project = typeof projects.$inferSelect;
 export type Label = typeof labels.$inferSelect;
 export type Sprint = typeof sprints.$inferSelect;
 export type Milestone = typeof milestones.$inferSelect;
+export type Document = typeof documents.$inferSelect;

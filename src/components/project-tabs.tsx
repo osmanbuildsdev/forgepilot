@@ -5,6 +5,7 @@ const tabs = [
   ["/board", "Kanban"],
   ["/sprints", "Sprintler"],
   ["/roadmap", "Yol haritası"],
+  ["/docs", "Dokümanlar"],
   ["/settings", "Ayarlar"],
 ] as const;
 

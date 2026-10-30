@@ -53,11 +53,11 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] `ai_generations` kaydı ve saatlik kota (görev önerisi 10, proje planı 5)
 
 ### Docs / Markdown
-- [ ] remark parser, frontmatter, bölüm hiyerarşisi
-- [ ] documents / versions / templates / imports tabloları
-- [ ] İçe aktarma, düzenleyici + önizleme, dışa aktarma
+- [x] remark parser, frontmatter, bölüm hiyerarşisi, görev referansları (deterministik, AI yok)
+- [x] documents ve document_versions tabloları (şablon tabloları şablon işiyle gelecek)
+- [x] .md içe aktarma (sürükle-bırak), editör + canlı önizleme + içindekiler, .md dışa aktarma, çakışma korumalı kayıt
 - [ ] Şablonlar ve AI ile şablon doldurma
-- [ ] Diff ve sürüm geçmişi
+- [ ] Diff (sürüm geçmişi ve geri yükleme yapıldı)
 
 ### GitHub ve arka plan
 - [ ] GitHub App, installation, repo bağlama
@@ -98,3 +98,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Proje sağlık skoru ve günlük özet | Migration 0009; görevlere tamamlanma zamanı ve task.completed olayı eklendi |
 | 2026-10-30 | Bildirim merkezi | Migration 0010; kişi kendi işlemi için bildirim almaz |
 | 2026-10-30 | Ctrl+K komut paleti ve arama | Türkçe noktalı/noktasız i araması için normalleştirme eklendi |
+| 2026-10-30 | Markdown doküman sistemi (1. aşama) | Migration 0011; güvenli HTML önizleme, sürüm geçmişi ve geri yükleme |
