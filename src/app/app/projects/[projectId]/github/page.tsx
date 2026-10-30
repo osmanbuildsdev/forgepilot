@@ -8,7 +8,8 @@ import {
   projectAccess,
   workspaceAccess,
 } from "@/server/projects/service";
-import { projectGithub } from "@/server/github/queries";
+import { projectGithub, latestDevSummary } from "@/server/github/queries";
+import { DevSummaryPanel } from "@/features/github/dev-summary";
 import { canWrite } from "@/server/permissions";
 import { ProjectHeader } from "@/components/project-header";
 import { ProjectRepos } from "@/features/github/project-repos";
@@ -45,6 +46,7 @@ export default async function Page({
     workspaceAccess(project.workspaceId, user.id),
     projectGithub(projectId, project.workspaceId),
   ]);
+  const summary = await latestDevSummary(projectId);
   const editable = canWrite(me.role);
   return (
     <>
@@ -93,6 +95,13 @@ export default async function Page({
           available={data.available}
           editable={editable}
         />
+        {data.connected.length > 0 && (
+          <DevSummaryPanel
+            projectId={projectId}
+            summary={summary}
+            canGenerate={editable && Boolean(process.env.GEMINI_API_KEY)}
+          />
+        )}
         {data.connected.length > 0 && (
           <div className="dash-grid">
             <section className="panel">

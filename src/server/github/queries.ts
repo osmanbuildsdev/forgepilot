@@ -1,7 +1,10 @@
 import "server-only";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/server/db";
+import { devSummary } from "@/features/ai/sprint-schema";
 import {
+  aiGenerations,
   githubCommits,
   githubInstallations,
   githubPullRequests,
@@ -222,4 +225,35 @@ export async function taskLinks(taskId: string) {
     .where(eq(taskGithubLinks.taskId, taskId))
     .orderBy(desc(taskGithubLinks.createdAt))
     .limit(30);
+}
+
+// The most recent development summary for the project, if any.
+export async function latestDevSummary(projectId: string) {
+  const [row] = await db
+    .select({
+      output: aiGenerations.output,
+      createdAt: aiGenerations.createdAt,
+    })
+    .from(aiGenerations)
+    .where(
+      and(
+        eq(aiGenerations.projectId, projectId),
+        eq(aiGenerations.kind, "dev_summary"),
+        eq(aiGenerations.status, "succeeded"),
+      ),
+    )
+    .orderBy(desc(aiGenerations.createdAt))
+    .limit(1);
+  const parsed = devSummary
+    .extend({
+      counts: z.object({
+        commits: z.number(),
+        pullRequests: z.number(),
+        tasks: z.number(),
+      }),
+    })
+    .safeParse(row?.output);
+  return parsed.success
+    ? { ...parsed.data, createdAt: row.createdAt.toISOString() }
+    : null;
 }

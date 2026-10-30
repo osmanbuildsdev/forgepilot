@@ -16,6 +16,12 @@ import {
   type SectionDraft,
 } from "@/features/ai/doc-schema";
 import { copilotReply, type CopilotReply } from "@/features/ai/copilot-schema";
+import {
+  devSummary,
+  sprintPlanDraft,
+  type DevSummary,
+  type SprintPlanDraft,
+} from "@/features/ai/sprint-schema";
 
 export interface AIProvider {
   readonly model: string;
@@ -29,6 +35,8 @@ export interface AIProvider {
   summarizeActivity(facts: unknown): Promise<BriefNarrative>;
   writeSections(request: SectionRequest): Promise<SectionDraft>;
   answerCopilot(request: CopilotRequest): Promise<CopilotReply>;
+  planSprint(request: unknown): Promise<SprintPlanDraft>;
+  summarizeDevelopment(request: unknown): Promise<DevSummary>;
 }
 
 const DATA_ONLY =
@@ -148,6 +156,36 @@ export class GeminiProvider implements AIProvider {
       ].join(" "),
       request,
       60000,
+    );
+  }
+
+  planSprint(request: unknown) {
+    return this.structured(
+      sprintPlanDraft,
+      [
+        "You plan the next sprint of a software team. Write `summary` and each `reason` in Turkish.",
+        DATA_ONLY,
+        "Pick tasks only from `candidates`, by taskNumber. Keep the total estimate within `capacityPoints` when it is given; tasks without an estimate count as uncertain, so include only a few of them.",
+        "Prefer high and urgent priority, overdue work and tasks that unblock others. Do not pick a task whose dependencies are unfinished and not also picked.",
+        "Balance work across assignees using `workload`. Explain trade-offs and what was left out in `summary`.",
+      ].join(" "),
+      request,
+      60000,
+    );
+  }
+
+  summarizeDevelopment(request: unknown) {
+    return this.structured(
+      devSummary,
+      [
+        "You summarise recent development activity of a software project for the team, in Turkish.",
+        DATA_ONLY,
+        "Use only the commits, pull requests and checks provided. Do not infer code changes that are not described there, and do not claim features are finished unless a merged PR or linked completed task says so.",
+        "Group the work into a few areas (e.g. Kimlik doğrulama, Arayüz, API, Testler) with a one or two sentence status each.",
+        "`recommendation` is the single most useful next step. `caveats` notes what the data cannot tell (e.g. work outside GitHub).",
+      ].join(" "),
+      request,
+      45000,
     );
   }
 }

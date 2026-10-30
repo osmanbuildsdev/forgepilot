@@ -49,7 +49,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] AI proje üretici (`/app/projects/new/ai`): plan önizleme ve düzenleme, onayla proje + milestone + sprint + görev oluşturma
 - [x] Günlük özet: veriden belirlenimci bölümler + günde bir kez önbelleğe alınan isteğe bağlı AI anlatımı
 - [x] Copilot: proje bağlamıyla soru-cevap, gerçek nesnelere doğrulanmış referanslar, onay isteyen aksiyonlar (görev oluştur, öncelik değiştir, sprinte ekle, görevi aç)
-- [ ] Sprint planlama
+- [x] AI sprint planlama: geçmiş hızdan hesaplanan kapasite, bağımlılık uyarıları, iş yükü dengesi; kullanıcı görevleri seçip onaylar
+- [x] GitHub geliştirme özeti: son 7 günün commit/PR/CI verisinden alan bazında özet ve önerilen adım (aktivite yoksa AI çağrılmaz)
 - [x] `ai_generations` kaydı ve saatlik kota (görev önerisi 10, proje planı 5)
 
 ### Docs / Markdown
@@ -108,3 +109,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | GitHub entegrasyonu (1. aşama, sunucu) | Migration 0013; AI veya GitHub görevi kendiliğinden kapatmaz |
 | 2026-10-30 | GitHub arayüzü | Gerçek GitHub App ile henüz denenmedi; yerelde webhook için tünel gerekir |
 | 2026-10-30 | Copilot | AI'ın uydurduğu görev, sprint veya PR referansları sunucuda düşürülür; canlı Gemini ile henüz denenmedi |
+| 2026-10-30 | AI sprint planlama ve GitHub geliştirme özeti | Kapasite AI'a hesaplatılmaz; canlı Gemini ile henüz denenmedi |

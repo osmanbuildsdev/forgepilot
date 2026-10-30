@@ -3,7 +3,8 @@ import { unwrap, errorMessage } from "@/lib/action-result";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarRange, Play, Plus, Flag } from "lucide-react";
+import { CalendarRange, Play, Plus, Flag, Sparkles } from "lucide-react";
+import { SprintPlanModal } from "./sprint-plan-modal";
 import {
   createSprint,
   startSprint,
@@ -50,12 +51,17 @@ export function SprintsPanel({
   sprints,
   canWrite,
   today,
+  projectKey,
+  aiEnabled,
 }: {
   projectId: string;
   sprints: SprintRow[];
   canWrite: boolean;
   today: string;
+  projectKey: string;
+  aiEnabled: boolean;
 }) {
+  const [planning, setPlanning] = useState<SprintRow | null>(null);
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -139,6 +145,7 @@ export function SprintsPanel({
           canWrite={canWrite}
           busy={busy}
           onComplete={() => setClosing(active)}
+          onPlan={canWrite && aiEnabled ? () => setPlanning(active) : undefined}
         />
       ) : (
         <div className="empty" style={{ padding: "36px 20px" }}>
@@ -206,6 +213,16 @@ export function SprintsPanel({
                     >
                       <Play size={13} /> Başlat
                     </Button>
+                    {aiEnabled && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => setPlanning(s)}
+                      >
+                        <Sparkles size={13} /> AI ile planla
+                      </Button>
+                    )}
                   </div>
                 )}
               </li>
@@ -246,6 +263,15 @@ export function SprintsPanel({
             ))}
           </ul>
         </section>
+      )}
+
+      {planning && (
+        <SprintPlanModal
+          projectId={projectId}
+          projectKey={projectKey}
+          sprint={{ id: planning.id, name: planning.name }}
+          onClose={() => setPlanning(null)}
+        />
       )}
 
       {creating && (
@@ -361,6 +387,7 @@ function ActiveSprint({
   canWrite,
   busy,
   onComplete,
+  onPlan,
 }: {
   sprint: SprintRow;
   today: string;
@@ -368,6 +395,7 @@ function ActiveSprint({
   canWrite: boolean;
   busy: boolean;
   onComplete: () => void;
+  onPlan?: () => void;
 }) {
   const total = Math.max(daysBetween(sprint.startDate, sprint.endDate) + 1, 1);
   const elapsed = Math.min(
@@ -403,6 +431,16 @@ function ActiveSprint({
               Panoda gör
             </Link>
           </Button>
+          {onPlan && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={onPlan}
+            >
+              <Sparkles size={13} /> AI ile planla
+            </Button>
+          )}
           {canWrite && (
             <Button size="sm" disabled={busy} onClick={onComplete}>
               Tamamla

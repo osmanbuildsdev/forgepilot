@@ -1751,6 +1751,57 @@ select:focus {
   field-sizing: content;
 }
 
+.plan-picks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.plan-picks label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.plan-picks label > span {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+}
+.plan-picks strong {
+  font-weight: 500;
+}
+.plan-picks .subtle,
+.plan-picks .muted,
+.plan-picks .overdue {
+  font-size: 12px;
+}
+.plan-picks input {
+  margin-top: 3px;
+}
+.dev-areas {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.dev-areas div {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+.dev-areas dt {
+  font-weight: 600;
+}
+.dev-areas dd {
+  margin: 0;
+  color: var(--fg-muted);
+}
+
 /* Kanban */
 .board {
   display: grid;

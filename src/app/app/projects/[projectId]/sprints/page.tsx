@@ -37,6 +37,8 @@ export default async function Page({
         projectId={projectId}
         canWrite={canWrite(me.role)}
         today={new Date().toISOString().slice(0, 10)}
+        projectKey={project.key}
+        aiEnabled={canWrite(me.role) && Boolean(process.env.GEMINI_API_KEY)}
         sprints={rows.map((r) => ({
           id: r.sprint.id,
           name: r.sprint.name,
