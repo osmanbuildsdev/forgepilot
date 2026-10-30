@@ -33,7 +33,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 ### Çekirdek proje yönetimi
 - [x] Görev alanları: atama, son tarih, tahmin puanı (öncelik zaten vardı)
 - [x] Etiketler (proje bazlı, görev başına çoklu seçim)
-- [ ] Yorumlar, alt görevler, bağımlılıklar, eklentiler
+- [x] Yorumlar (ekle, düzenle, sil; yöneticiler moderasyon yapabilir) ve sağdan açılan görev paneli
+- [ ] Alt görevler, bağımlılıklar, eklentiler
 - [ ] Özel Kanban kolonları
 - [ ] Proje düzenleme / silme
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
@@ -84,3 +85,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Üye daveti ve rol yönetimi eklendi | Migration 0004; /app/settings/members ve /invite/[token]; davet bağlantısı elle iletilir |
 | 2026-10-30 | Tasarım sistemi, landing, giriş ve kayıt sayfaları yenilendi | Gradyan yok, tek vurgu rengi; henüz olmayan özellikler "Yakında" olarak işaretli |
 | 2026-10-30 | Uygulama içi arayüz yeni tasarıma geçirildi | Dashboard gerçek sayımlar gösteriyor; /app/tasks eklendi |
+| 2026-10-30 | Görev yorumları ve görev detay paneli | Migration 0005; yorumlar aktivite geçmişine yazılır |

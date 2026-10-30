@@ -24,6 +24,7 @@ import {
 import { generateTaskDraft } from "@/server/ai/actions";
 import { TaskCardContent } from "@/components/task-card";
 import { Modal } from "@/components/modal";
+import { TaskComments } from "./task-comments";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { generatedTasks } from "./schemas";
@@ -118,6 +119,7 @@ export function Board({
   labelIdsByTask,
   editable,
   aiEnabled,
+  viewer,
 }: {
   projectId: string;
   projectKey: string;
@@ -127,6 +129,7 @@ export function Board({
   labelIdsByTask: Record<string, string[]>;
   editable: boolean;
   aiEnabled: boolean;
+  viewer: { id: string; canModerate: boolean };
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Task | "new" | null>(null);
@@ -272,6 +275,7 @@ export function Board({
             editing === "new" ? "Yeni görev" : `${projectKey}-${editing.number}`
           }
           onClose={close}
+          variant="drawer"
         >
           <form
             className="form-grid"
@@ -440,6 +444,16 @@ export function Board({
               </div>
             )}
           </form>
+          {editing !== "new" && (
+            <TaskComments
+              key={editing.id}
+              projectId={projectId}
+              taskId={editing.id}
+              viewerId={viewer.id}
+              canWrite={editable}
+              canModerate={viewer.canModerate}
+            />
+          )}
         </Modal>
       )}
       {ai && (

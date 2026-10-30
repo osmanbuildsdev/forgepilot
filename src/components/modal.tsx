@@ -5,10 +5,12 @@ export function Modal({
   title,
   onClose,
   children,
+  variant = "dialog",
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  variant?: "dialog" | "drawer";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -44,13 +46,18 @@ export function Modal({
     };
   }, [onClose]);
   return (
-    <div className="modal-backdrop">
+    <div
+      className={`modal-backdrop ${variant}`}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="panel modal"
+        className={`panel modal ${variant}`}
       >
         <div className="row between modal-header">
           <h2>{title}</h2>

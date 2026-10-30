@@ -6,7 +6,7 @@ import {
   workspaceAccess,
   workspaceMembers,
 } from "@/server/projects/service";
-import { canWrite } from "@/server/permissions";
+import { canWrite, canManageMembers } from "@/server/permissions";
 import { ProjectTabs } from "@/components/project-tabs";
 import { Board } from "@/features/tasks/board";
 export default async function Page({
@@ -41,6 +41,7 @@ export default async function Page({
         labelIdsByTask={data.labelIdsByTask}
         editable={canWrite(member.role)}
         aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
+        viewer={{ id: user.id, canModerate: canManageMembers(member.role) }}
       />
     </>
   );

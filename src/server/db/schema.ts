@@ -189,6 +189,7 @@ export const ACTIVITY_TYPES = [
   "task.updated",
   "task.deleted",
   "label.created",
+  "comment.created",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 export const ACTIVITY_SOURCES = ["user", "ai", "github", "system"] as const;
@@ -220,6 +221,23 @@ export const activities = pgTable(
     index("activity_project_date").on(t.projectId, t.createdAt),
     index("activity_project_type").on(t.projectId, t.type),
   ],
+);
+export const taskComments = pgTable(
+  "task_comments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    // Comments outlive their author's account; the name is then shown as removed.
+    authorId: text("author_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    body: text("body").notNull(),
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [index("comment_task_date").on(t.taskId, t.createdAt)],
 );
 export const workspaceInvitations = pgTable(
   "workspace_invitations",
