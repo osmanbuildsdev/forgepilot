@@ -74,7 +74,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Algoritmik proje sağlık skoru (6 açıklanabilir faktör, günlük anlık görüntü, mini grafik)
 - [x] Bildirimler: görev atama, atanmış göreve yorum, sprint başlangıcı, davetin kabulü; zil menüsü ve gelen kutusu (zamana bağlı bildirimler arka plan işiyle gelecek)
 - [x] Ctrl+K komut paleti: görev (başlık veya FORGE-24), proje ve kişi araması, gezinme komutları, Türkçe ı/İ uyumlu arama (doküman araması Docs ile gelecek)
-- [ ] Raporlar ve grafikler
+- [x] Raporlar (`/app/reports`): haftalık ilerleme, sprint tamamlama, ekip iş yükü, GitHub hareketi, geciken görevler; proje ve 7/30/90 gün filtresi; her grafikte ipucu ve tablo görünümü, renk paleti iki temada da doğrulandı
 - [ ] Ayarlar sayfaları, pricing, forgot-password
 - [x] Landing sayfası yeniden tasarlandı (ürün önizlemesi, parallax, özellikler, iş akışı, GitHub, fiyatlandırma, footer)
 - [x] Tasarım sistemi: renk tokenları, Geist fontu, açık/koyu tema, ortak bileşen stilleri
@@ -112,3 +112,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Copilot | AI'ın uydurduğu görev, sprint veya PR referansları sunucuda düşürülür; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | AI sprint planlama ve GitHub geliştirme özeti | Kapasite AI'a hesaplatılmaz; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | Arka plan işleri ve zamanlanmış bildirimler | Worker Next.js dışında çalışacak şekilde ayrıldı; gerçek Redis ile henüz denenmedi |
+| 2026-10-30 | Raporlar ve grafikler | Görsel kontrol, sunucudan istemciye fonksiyon geçirme hatasını yakaladı ve düzeltildi |

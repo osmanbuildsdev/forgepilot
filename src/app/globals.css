@@ -19,6 +19,8 @@
   --accent-hover: #9a3412;
   --accent-soft: #fff4ed;
   --accent-fg: #ffffff;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
   --success: #15803d;
   --warning: #b45309;
   --danger: #b91c1c;
@@ -54,6 +56,8 @@
   --accent-hover: #ff8f66;
   --accent-soft: #2a1710;
   --accent-fg: #170b06;
+  --series-1: #3987e5;
+  --series-2: #d95926;
   --success: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
@@ -1802,6 +1806,85 @@ select:focus {
   color: var(--fg-muted);
 }
 
+/* Charts and reports */
+.chart {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.chart-tooltip {
+  display: grid;
+  gap: 4px;
+  min-width: 150px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.chart-tooltip strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.chart-tooltip b {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.chart-table summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+.chart-table table,
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.chart-table table {
+  margin-top: 8px;
+}
+.chart-table th,
+.chart-table td,
+.report-table th,
+.report-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.chart-table th,
+.report-table th {
+  color: var(--fg-subtle);
+  font-weight: 500;
+}
+.report-table {
+  font-size: 13px;
+}
+.report-table a:hover {
+  color: var(--accent);
+}
+
 /* Kanban */
 .board {
   display: grid;
@@ -2758,8 +2841,9 @@ select:focus {
   .workflow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .brief-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .brief-grid,
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
   .doc-body.mode-split,
   .doc-body.mode-edit,
