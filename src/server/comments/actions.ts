@@ -1,4 +1,5 @@
 "use server";
+import { notify } from "@/server/notifications/service";
 import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
 import { and, asc, eq, sql } from "drizzle-orm";
@@ -16,7 +17,12 @@ const commentBody = z.string().trim().min(1).max(5000);
 
 async function taskInProject(projectId: string, taskId: string) {
   const [task] = await db
-    .select({ id: tasks.id, number: tasks.number })
+    .select({
+      id: tasks.id,
+      number: tasks.number,
+      title: tasks.title,
+      assigneeId: tasks.assigneeId,
+    })
     .from(tasks)
     .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
   if (!task) throw new UserError("Görev bulunamadı.");
@@ -62,7 +68,7 @@ export async function addComment(
     z.uuid().parse(taskId);
     const body = commentBody.parse(input);
     const user = await requireUser();
-    await projectAccess(projectId, user.id, true);
+    const project = await projectAccess(projectId, user.id, true);
     const task = await taskInProject(projectId, taskId);
     await db.transaction(async (tx) => {
       const [comment] = await tx
@@ -77,6 +83,19 @@ export async function addComment(
         message: `#${task.number} görevine yorum eklendi.`,
         metadata: { commentId: comment.id },
       });
+      if (task.assigneeId)
+        await notify(tx, [
+          {
+            userId: task.assigneeId,
+            actorId: user.id,
+            type: "comment.added",
+            title: `${user.name}, ${project.key}-${task.number} görevine yorum yaptı`,
+            body: body.slice(0, 200),
+            href: `/app/projects/${projectId}/board`,
+            projectId,
+            taskId,
+          },
+        ]);
     });
   });
 }

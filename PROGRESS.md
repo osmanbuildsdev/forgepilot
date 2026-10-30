@@ -67,7 +67,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 
 ### Analiz ve ürün
 - [x] Algoritmik proje sağlık skoru (6 açıklanabilir faktör, günlük anlık görüntü, mini grafik)
-- [ ] Bildirimler
+- [x] Bildirimler: görev atama, atanmış göreve yorum, sprint başlangıcı, davetin kabulü; zil menüsü ve gelen kutusu (zamana bağlı bildirimler arka plan işiyle gelecek)
 - [ ] Ctrl+K komut paleti ve arama
 - [ ] Raporlar ve grafikler
 - [ ] Ayarlar sayfaları, pricing, forgot-password
@@ -96,3 +96,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Sunucu işlemlerinde hata yönetimi | Next.js üretimde hata mesajlarını gizlediği için işlemler { ok, error } döndürüyor |
 | 2026-10-30 | AI proje üretici | Migration 0008; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | Proje sağlık skoru ve günlük özet | Migration 0009; görevlere tamamlanma zamanı ve task.completed olayı eklendi |
+| 2026-10-30 | Bildirim merkezi | Migration 0010; kişi kendi işlemi için bildirim almaz |

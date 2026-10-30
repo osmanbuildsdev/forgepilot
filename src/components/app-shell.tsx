@@ -8,17 +8,20 @@ import {
   Users,
   CircleCheck,
   Plus,
+  Inbox,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
 import { Button } from "./ui/button";
 import { authClient } from "@/lib/auth-client";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 
 type ShellProject = { id: string; name: string; key: string };
 
 const nav = [
   { href: "/app", label: "Genel bakış", icon: LayoutDashboard, exact: true },
   { href: "/app/tasks", label: "Görevlerim", icon: CircleCheck },
+  { href: "/app/inbox", label: "Gelen kutusu", icon: Inbox },
   { href: "/app/projects", label: "Projeler", icon: FolderKanban, exact: true },
   { href: "/app/settings/members", label: "Üyeler", icon: Users },
 ];
@@ -26,6 +29,7 @@ const nav = [
 function crumbs(path: string, projects: ShellProject[]) {
   if (path === "/app") return ["Genel bakış"];
   if (path.startsWith("/app/tasks")) return ["Görevlerim"];
+  if (path.startsWith("/app/inbox")) return ["Gelen kutusu"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new/ai")
     return ["Projeler", "Yeni proje", "AI ile"];
@@ -51,11 +55,13 @@ export function AppShell({
   user,
   workspace,
   projects,
+  unread,
 }: {
   children: React.ReactNode;
   user: { name: string; email: string };
   workspace: string;
   projects: ShellProject[];
+  unread: number;
 }) {
   const path = usePathname();
   const router = useRouter();
@@ -155,6 +161,7 @@ export function AppShell({
             ))}
           </nav>
           <div className="row" style={{ gap: 6 }}>
+            <NotificationBell unread={unread} />
             <ThemeToggle />
             <Button size="sm" variant="outline" asChild>
               <Link href="/app/projects/new">

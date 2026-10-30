@@ -4,6 +4,7 @@ import {
   userWorkspaces,
 } from "@/server/projects/service";
 import { AppShell } from "@/components/app-shell";
+import { unreadCount } from "@/server/notifications/service";
 export const dynamic = "force-dynamic";
 export default async function Layout({
   children,
@@ -11,13 +12,15 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
-  const [spaces, items] = await Promise.all([
+  const [spaces, items, unread] = await Promise.all([
     userWorkspaces(user.id),
     userProjects(user.id),
+    unreadCount(user.id),
   ]);
   return (
     <AppShell
       user={{ name: user.name, email: user.email }}
+      unread={unread}
       workspace={
         spaces.length === 1
           ? spaces[0].name

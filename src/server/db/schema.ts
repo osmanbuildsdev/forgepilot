@@ -383,6 +383,37 @@ export const projectHealthSnapshots = pgTable(
   },
   (t) => [uniqueIndex("health_project_day").on(t.projectId, t.day)],
 );
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    actorId: text("actor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body").default("").notNull(),
+    // App-relative link, e.g. /app/projects/<id>/board.
+    href: text("href").notNull(),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    taskId: uuid("task_id").references(() => tasks.id, {
+      onDelete: "cascade",
+    }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [
+    index("notification_user_date").on(t.userId, t.createdAt),
+    index("notification_user_unread")
+      .on(t.userId)
+      .where(sql`${t.readAt} is null`),
+  ],
+);
 export const workspaceInvitations = pgTable(
   "workspace_invitations",
   {

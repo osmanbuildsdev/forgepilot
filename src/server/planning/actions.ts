@@ -1,7 +1,8 @@
 "use server";
+import { notify } from "@/server/notifications/service";
 import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { milestones, sprints, tasks } from "@/server/db/schema";
@@ -83,6 +84,22 @@ export async function startSprint(projectId: string, sprintId: string) {
         message: `${sprint.name} başladı.`,
         metadata: { sprintId },
       });
+      const assignees = await tx
+        .selectDistinct({ id: tasks.assigneeId })
+        .from(tasks)
+        .where(and(eq(tasks.sprintId, sprintId), isNotNull(tasks.assigneeId)));
+      await notify(
+        tx,
+        assignees.map((a) => ({
+          userId: a.id!,
+          actorId: user.id,
+          type: "sprint.started" as const,
+          title: `${sprint.name} başladı`,
+          body: "Bu sprintte sana atanmış görevler var.",
+          href: `/app/projects/${projectId}/board?sprint=${sprintId}`,
+          projectId,
+        })),
+      );
     });
     refresh();
   });

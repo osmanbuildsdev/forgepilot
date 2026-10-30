@@ -71,6 +71,13 @@
       "when": 1793386274958,
       "tag": "0009_health_and_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793386702106,
+      "tag": "0010_notifications",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 "use server";
+import { notify } from "@/server/notifications/service";
 import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
 import { createHash, randomBytes } from "node:crypto";
@@ -134,6 +135,16 @@ export async function acceptInvite(token: string) {
         .update(invitations)
         .set({ acceptedAt: new Date() })
         .where(eq(invitations.id, invite.id));
+      await notify(tx, [
+        {
+          userId: invite.invitedBy,
+          actorId: user.id,
+          type: "member.joined",
+          title: `${user.name} çalışma alanına katıldı`,
+          body: invite.email,
+          href: "/app/settings/members",
+        },
+      ]);
       return invite.workspaceId;
     });
     revalidatePath("/app", "layout");

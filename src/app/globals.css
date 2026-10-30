@@ -1024,6 +1024,135 @@ select:focus {
   padding-left: 18px;
 }
 
+/* Popovers and notifications */
+.popover-anchor {
+  position: relative;
+}
+.popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(360px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+  overflow: hidden;
+}
+.popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.popover-foot {
+  display: block;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-align: center;
+}
+.popover-foot:hover {
+  color: var(--fg);
+  background: var(--surface-2);
+}
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+.bell {
+  position: relative;
+}
+.bell-count {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 9px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+}
+.notifications ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.notifications li a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+}
+.notifications li a > .subtle {
+  grid-column: 1;
+  font-size: 12px;
+}
+.notifications li a time {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+.notifications li a:hover,
+.inbox-list a:hover {
+  background: var(--surface-2);
+}
+.notifications li.unread a > .truncate:first-child {
+  font-weight: 600;
+}
+.inbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.inbox-list a {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.inbox-list li + li {
+  border-top: 1px solid var(--border);
+}
+.inbox-list .dot {
+  margin-top: 7px;
+  color: transparent;
+}
+.inbox-list li.unread .dot {
+  color: var(--accent);
+}
+.inbox-list strong {
+  font-weight: 500;
+}
+.inbox-list li.unread strong {
+  font-weight: 600;
+}
+.inbox-list time {
+  font-size: 12px;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
 /* Kanban */
 .board {
   display: grid;

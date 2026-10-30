@@ -1,4 +1,5 @@
 "use server";
+import { notify } from "@/server/notifications/service";
 import { UserError, attempt } from "@/server/errors";
 import { z } from "zod";
 import { and, eq, inArray, sql } from "drizzle-orm";
@@ -97,7 +98,27 @@ export async function saveTasks(projectId: string, input: unknown) {
             createdBy: user.id,
           })),
         )
-        .returning({ id: tasks.id, number: tasks.number });
+        .returning({
+          id: tasks.id,
+          number: tasks.number,
+          title: tasks.title,
+          assigneeId: tasks.assigneeId,
+        });
+      await notify(
+        tx,
+        created
+          .filter((t) => t.assigneeId)
+          .map((t) => ({
+            userId: t.assigneeId!,
+            actorId: user.id,
+            type: "task.assigned" as const,
+            title: `${user.name} sana ${project.key}-${t.number} görevini atadı`,
+            body: t.title,
+            href: `/app/projects/${projectId}/board`,
+            projectId,
+            taskId: t.id,
+          })),
+      );
       await recordActivity(tx, {
         projectId,
         type: "task.created",
@@ -122,7 +143,11 @@ export async function updateTask(
     const project = await projectAccess(projectId, user.id, true);
     await assertAssignable(project.workspaceId, data.assigneeId);
     const [current] = await db
-      .select({ sprintId: tasks.sprintId, status: tasks.status })
+      .select({
+        sprintId: tasks.sprintId,
+        status: tasks.status,
+        assigneeId: tasks.assigneeId,
+      })
       .from(tasks)
       .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
     // A task may stay in the (possibly closed) sprint it already belongs to.
@@ -142,6 +167,19 @@ export async function updateTask(
         .returning();
       if (!t) throw new UserError("Görev bulunamadı.");
       const completed = t.status === "done" && current?.status !== "done";
+      if (t.assigneeId && t.assigneeId !== current?.assigneeId)
+        await notify(tx, [
+          {
+            userId: t.assigneeId,
+            actorId: user.id,
+            type: "task.assigned",
+            title: `${user.name} sana ${project.key}-${t.number} görevini atadı`,
+            body: t.title,
+            href: `/app/projects/${projectId}/board`,
+            projectId,
+            taskId: t.id,
+          },
+        ]);
       await recordActivity(tx, {
         projectId,
         type: completed ? "task.completed" : "task.updated",
