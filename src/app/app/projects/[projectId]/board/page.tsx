@@ -37,6 +37,8 @@ export default async function Page({
         projectKey={data.project.key}
         tasks={data.tasks}
         members={people}
+        labels={data.labels}
+        labelIdsByTask={data.labelIdsByTask}
         editable={canWrite(member.role)}
         aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
       />

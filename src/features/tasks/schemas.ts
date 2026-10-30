@@ -37,3 +37,11 @@ export const projectInput = z.object({
   key: z.string().regex(/^[A-Z][A-Z0-9]{1,9}$/),
   description: z.string().max(5000).default(""),
 });
+export const labelInput = z.object({
+  name: z.string().trim().min(1).max(40),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .default("#6b7280"),
+});
+export const taskLabelIds = z.array(z.uuid()).max(20);

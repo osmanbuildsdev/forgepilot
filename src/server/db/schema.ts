@@ -11,6 +11,7 @@ import {
   pgEnum,
   jsonb,
   date,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 const dates = () => ({
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -153,11 +154,40 @@ export const tasks = pgTable(
     index("task_assignee").on(t.assigneeId),
   ],
 );
+export const labels = pgTable(
+  "labels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").default("#6b7280").notNull(),
+    ...dates(),
+  },
+  (t) => [uniqueIndex("label_project_name").on(t.projectId, t.name)],
+);
+export const taskLabels = pgTable(
+  "task_labels",
+  {
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => labels.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.taskId, t.labelId] }),
+    index("task_label_label").on(t.labelId),
+  ],
+);
 export const ACTIVITY_TYPES = [
   "project.note",
   "task.created",
   "task.updated",
   "task.deleted",
+  "label.created",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 export const ACTIVITY_SOURCES = ["user", "ai", "github", "system"] as const;
@@ -192,3 +222,4 @@ export const activities = pgTable(
 );
 export type Task = typeof tasks.$inferSelect;
 export type Project = typeof projects.$inferSelect;
+export type Label = typeof labels.$inferSelect;

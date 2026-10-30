@@ -13,8 +13,14 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Sparkles } from "lucide-react";
-import type { Task } from "@/server/db/schema";
-import { saveTasks, updateTask, deleteTask } from "@/server/actions";
+import type { Task, Label } from "@/server/db/schema";
+import {
+  saveTasks,
+  updateTask,
+  deleteTask,
+  createLabel,
+  setTaskLabels,
+} from "@/server/actions";
 import { generateTaskDraft } from "@/server/ai/actions";
 import { TaskCardContent } from "@/components/task-card";
 import { Modal } from "@/components/modal";
@@ -33,12 +39,14 @@ function Card({
   task,
   projectKey,
   assignee,
+  labels,
   onEdit,
   disabled,
 }: {
   task: Task;
   projectKey: string;
   assignee?: string;
+  labels: Label[];
   onEdit: () => void;
   disabled: boolean;
 }) {
@@ -73,6 +81,7 @@ function Card({
           task={task}
           projectKey={projectKey}
           assignee={assignee}
+          labels={labels}
         />
       </button>
     </article>
@@ -105,6 +114,8 @@ export function Board({
   projectKey,
   tasks,
   members,
+  labels,
+  labelIdsByTask,
   editable,
   aiEnabled,
 }: {
@@ -112,6 +123,8 @@ export function Board({
   projectKey: string;
   tasks: Task[];
   members: { id: string; name: string }[];
+  labels: Label[];
+  labelIdsByTask: Record<string, string[]>;
   editable: boolean;
   aiEnabled: boolean;
 }) {
@@ -184,6 +197,19 @@ export function Board({
               AI ile planla
             </Button>
             <Button
+              variant="outline"
+              disabled={busy}
+              onClick={async () => {
+                const name = window.prompt("Yeni etiket adı");
+                if (name?.trim())
+                  await run(async () => {
+                    await createLabel(projectId, { name });
+                  });
+              }}
+            >
+              Etiket ekle
+            </Button>
+            <Button
               disabled={busy}
               onClick={() => {
                 setError("");
@@ -218,6 +244,9 @@ export function Board({
                     task={t}
                     projectKey={projectKey}
                     assignee={members.find((m) => m.id === t.assigneeId)?.name}
+                    labels={labels.filter((l) =>
+                      labelIdsByTask[t.id]?.includes(l.id),
+                    )}
                     onEdit={() => {
                       setError("");
                       setEditing(t);
@@ -248,12 +277,18 @@ export function Board({
             className="form-grid"
             onSubmit={async (e) => {
               e.preventDefault();
-              const data = Object.fromEntries(new FormData(e.currentTarget));
-              const ok = await run(() =>
-                editing === "new"
-                  ? saveTasks(projectId, { tasks: [data] })
-                  : updateTask(projectId, editing.id, data),
-              );
+              const form = new FormData(e.currentTarget);
+              const selected = form.getAll("labelIds").map(String);
+              form.delete("labelIds");
+              const data = Object.fromEntries(form);
+              const ok = await run(async () => {
+                if (editing === "new")
+                  await saveTasks(projectId, { tasks: [data] });
+                else {
+                  await updateTask(projectId, editing.id, data);
+                  await setTaskLabels(projectId, editing.id, selected);
+                }
+              });
               if (ok) close();
             }}
           >
@@ -348,6 +383,27 @@ export function Board({
                 />
               </label>
             </div>
+            {editing !== "new" && labels.length > 0 && (
+              <fieldset className="field">
+                Etiketler
+                <div className="row" style={{ flexWrap: "wrap" }}>
+                  {labels.map((l) => (
+                    <label key={l.id} className="row" style={{ gap: 5 }}>
+                      <input
+                        type="checkbox"
+                        name="labelIds"
+                        value={l.id}
+                        defaultChecked={labelIdsByTask[editing.id]?.includes(
+                          l.id,
+                        )}
+                        disabled={!editable}
+                      />
+                      <span style={{ color: l.color }}>{l.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             {error && (
               <p className="error" role="alert">
                 {error}

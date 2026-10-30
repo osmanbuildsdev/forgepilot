@@ -1,9 +1,16 @@
 "use server";
 import { z } from "zod";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { workspaces, members, projects, tasks } from "@/server/db/schema";
+import {
+  workspaces,
+  members,
+  projects,
+  tasks,
+  labels,
+  taskLabels,
+} from "@/server/db/schema";
 import { recordActivity } from "@/server/activity";
 import {
   requireUser,
@@ -11,7 +18,13 @@ import {
   projectAccess,
   assertAssignable,
 } from "@/server/projects/service";
-import { projectInput, taskInput, taskBatch } from "@/features/tasks/schemas";
+import {
+  projectInput,
+  taskInput,
+  taskBatch,
+  labelInput,
+  taskLabelIds,
+} from "@/features/tasks/schemas";
 export async function createWorkspace(input: unknown) {
   const user = await requireUser();
   const name = z.string().trim().min(2).max(100).parse(input);
@@ -125,6 +138,60 @@ export async function deleteTask(projectId: string, taskId: string) {
       message: `#${t.number} silindi: ${t.title}`,
       metadata: { number: t.number, title: t.title },
     });
+  });
+  revalidatePath("/app", "layout");
+}
+export async function createLabel(projectId: string, input: unknown) {
+  z.uuid().parse(projectId);
+  const data = labelInput.parse(input);
+  const user = await requireUser();
+  await projectAccess(projectId, user.id, true);
+  const labelId = await db.transaction(async (tx) => {
+    const created = await tx
+      .insert(labels)
+      .values({ ...data, projectId })
+      .onConflictDoNothing()
+      .returning({ id: labels.id });
+    if (!created.length) throw new Error("Bu etiket zaten var.");
+    await recordActivity(tx, {
+      projectId,
+      type: "label.created",
+      actorId: user.id,
+      message: `"${data.name}" etiketi oluşturuldu.`,
+    });
+    return created[0].id;
+  });
+  revalidatePath("/app", "layout");
+  return labelId;
+}
+export async function setTaskLabels(
+  projectId: string,
+  taskId: string,
+  input: unknown,
+) {
+  z.uuid().parse(projectId);
+  z.uuid().parse(taskId);
+  const ids = [...new Set(taskLabelIds.parse(input))];
+  const user = await requireUser();
+  await projectAccess(projectId, user.id, true);
+  await db.transaction(async (tx) => {
+    const [task] = await tx
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
+    if (!task) throw new Error("Görev bulunamadı.");
+    const valid = ids.length
+      ? await tx
+          .select({ id: labels.id })
+          .from(labels)
+          .where(and(eq(labels.projectId, projectId), inArray(labels.id, ids)))
+      : [];
+    if (valid.length !== ids.length) throw new Error("Geçersiz etiket.");
+    await tx.delete(taskLabels).where(eq(taskLabels.taskId, taskId));
+    if (ids.length)
+      await tx
+        .insert(taskLabels)
+        .values(ids.map((labelId) => ({ taskId, labelId })));
   });
   revalidatePath("/app", "layout");
 }

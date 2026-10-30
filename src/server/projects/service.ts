@@ -11,6 +11,8 @@ import {
   tasks,
   activities,
   user,
+  labels,
+  taskLabels,
 } from "@/server/db/schema";
 import { canWrite } from "@/server/permissions";
 export function configured() {
@@ -71,7 +73,7 @@ export async function userProjects(userId: string) {
 }
 export async function projectData(projectId: string, userId: string) {
   const project = await projectAccess(projectId, userId);
-  const [items, events] = await Promise.all([
+  const [items, events, projectLabels, links] = await Promise.all([
     db
       .select()
       .from(tasks)
@@ -83,8 +85,26 @@ export async function projectData(projectId: string, userId: string) {
       .where(eq(activities.projectId, projectId))
       .orderBy(desc(activities.createdAt))
       .limit(15),
+    db
+      .select()
+      .from(labels)
+      .where(eq(labels.projectId, projectId))
+      .orderBy(labels.name),
+    db
+      .select({ taskId: taskLabels.taskId, labelId: taskLabels.labelId })
+      .from(taskLabels)
+      .innerJoin(tasks, eq(tasks.id, taskLabels.taskId))
+      .where(eq(tasks.projectId, projectId)),
   ]);
-  return { project, tasks: items, events };
+  const labelIdsByTask: Record<string, string[]> = {};
+  for (const l of links) (labelIdsByTask[l.taskId] ??= []).push(l.labelId);
+  return {
+    project,
+    tasks: items,
+    events,
+    labels: projectLabels,
+    labelIdsByTask,
+  };
 }
 export async function workspaceMembers(workspaceId: string) {
   return db
