@@ -247,6 +247,7 @@ export const ACTIVITY_TYPES = [
   "task.deleted",
   "label.created",
   "comment.created",
+  "project.created",
   "project.updated",
   "sprint.started",
   "sprint.completed",
@@ -332,6 +333,36 @@ export const taskComments = pgTable(
     ...dates(),
   },
   (t) => [index("comment_task_date").on(t.taskId, t.createdAt)],
+);
+export const aiGenerationStatus = pgEnum("ai_generation_status", [
+  "succeeded",
+  "failed",
+  "applied",
+]);
+// Every AI call is recorded: what was asked, what came back, and whether the
+// user applied it. Outputs are never written to project tables directly.
+export const aiGenerations = pgTable(
+  "ai_generations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    workspaceId: uuid("workspace_id").references(() => workspaces.id, {
+      onDelete: "cascade",
+    }),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    kind: text("kind").notNull(),
+    model: text("model").notNull(),
+    input: jsonb("input").notNull(),
+    output: jsonb("output"),
+    status: aiGenerationStatus("status").notNull(),
+    error: text("error"),
+    ...dates(),
+  },
+  (t) => [index("ai_generation_user_date").on(t.userId, t.createdAt)],
 );
 export const workspaceInvitations = pgTable(
   "workspace_invitations",

@@ -45,12 +45,12 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Kanban'da sprint filtresi, görev formunda sprint ve milestone seçimi
 
 ### AI
-- [ ] AIProvider genişletme (proje planı, özet, sağlık, sonraki adım)
-- [ ] AI proje üretici (`/app/projects/new/ai`)
+- [ ] AIProvider genişletme (proje planı eklendi; özet, sağlık, sonraki adım kaldı)
+- [x] AI proje üretici (`/app/projects/new/ai`): plan önizleme ve düzenleme, onayla proje + milestone + sprint + görev oluşturma
 - [ ] Günlük özet (önbellekli)
 - [ ] Copilot
 - [ ] Sprint planlama
-- [ ] `ai_generations` kaydı ve kota
+- [x] `ai_generations` kaydı ve saatlik kota (görev önerisi 10, proje planı 5)
 
 ### Docs / Markdown
 - [ ] remark parser, frontmatter, bölüm hiyerarşisi
@@ -94,3 +94,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Proje ayarları sekmesi | Proje anahtarı sabit; silme işlemi anahtar yazılarak onaylanır |
 | 2026-10-30 | Sprint ve milestone yönetimi, yol haritası | Migration 0007; son tarih doğrulamasındaki hata da düzeltildi |
 | 2026-10-30 | Sunucu işlemlerinde hata yönetimi | Next.js üretimde hata mesajlarını gizlediği için işlemler { ok, error } döndürüyor |
+| 2026-10-30 | AI proje üretici | Migration 0008; canlı Gemini ile henüz denenmedi |

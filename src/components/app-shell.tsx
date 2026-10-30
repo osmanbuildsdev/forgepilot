@@ -27,6 +27,8 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path === "/app") return ["Genel bakış"];
   if (path.startsWith("/app/tasks")) return ["Görevlerim"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
+  if (path === "/app/projects/new/ai")
+    return ["Projeler", "Yeni proje", "AI ile"];
   if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
   const match = path.match(
     /^\/app\/projects\/([^/]+)(?:\/(board|sprints|roadmap|settings))?/,
