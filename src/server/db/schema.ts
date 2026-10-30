@@ -145,6 +145,8 @@ export const tasks = pgTable(
     }),
     dueDate: date("due_date", { mode: "string" }),
     estimatePoints: integer("estimate_points"),
+    // Set when the task enters "done", cleared when it leaves.
+    completedAt: timestamp("completed_at", { withTimezone: true }),
     sprintId: uuid("sprint_id").references((): AnyPgColumn => sprints.id, {
       onDelete: "set null",
     }),
@@ -163,6 +165,7 @@ export const tasks = pgTable(
     index("task_assignee").on(t.assigneeId),
     index("task_sprint").on(t.sprintId),
     index("task_milestone").on(t.milestoneId),
+    index("task_project_completed").on(t.projectId, t.completedAt),
   ],
 );
 export const sprintStatusEnum = pgEnum("sprint_status", [
@@ -244,6 +247,7 @@ export const ACTIVITY_TYPES = [
   "project.note",
   "task.created",
   "task.updated",
+  "task.completed",
   "task.deleted",
   "label.created",
   "comment.created",
@@ -363,6 +367,21 @@ export const aiGenerations = pgTable(
     ...dates(),
   },
   (t) => [index("ai_generation_user_date").on(t.userId, t.createdAt)],
+);
+// One row per project per day, so health can be charted over time.
+export const projectHealthSnapshots = pgTable(
+  "project_health_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    score: integer("score").notNull(),
+    factors: jsonb("factors").notNull(),
+    ...dates(),
+  },
+  (t) => [uniqueIndex("health_project_day").on(t.projectId, t.day)],
 );
 export const workspaceInvitations = pgTable(
   "workspace_invitations",

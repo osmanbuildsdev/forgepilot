@@ -5,6 +5,8 @@ import { UserError } from "@/server/errors";
 import { generatedTasks } from "@/features/tasks/schemas";
 import {
   projectPlan,
+  briefNarrative,
+  type BriefNarrative,
   type PlanRequest,
   type ProjectPlan,
 } from "@/features/ai/plan-schema";
@@ -18,6 +20,7 @@ export interface AIProvider {
     instruction: string;
   }): Promise<z.infer<typeof generatedTasks>>;
   generateProjectPlan(request: PlanRequest): Promise<ProjectPlan>;
+  summarizeActivity(facts: unknown): Promise<BriefNarrative>;
 }
 
 const DATA_ONLY =
@@ -90,6 +93,21 @@ export class GeminiProvider implements AIProvider {
       ].join(" "),
       request,
       90000,
+    );
+  }
+
+  summarizeActivity(facts: unknown) {
+    return this.structured(
+      briefNarrative,
+      [
+        "You write a short daily brief for a software developer, in Turkish.",
+        DATA_ONLY,
+        "Use only the facts provided. Refer to tasks by their key (e.g. FORGE-24).",
+        "headline: one sentence on the overall state. focus: what to work on today, most important first. watch: risks worth attention.",
+        "If there is little data, say so plainly instead of inventing work.",
+      ].join(" "),
+      facts,
+      30000,
     );
   }
 }

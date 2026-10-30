@@ -93,6 +93,7 @@ export async function saveTasks(projectId: string, input: unknown) {
             ...t,
             projectId,
             number: p.nextTaskNumber - data.tasks.length + i + 1,
+            completedAt: t.status === "done" ? new Date() : null,
             createdBy: user.id,
           })),
         )
@@ -121,7 +122,7 @@ export async function updateTask(
     const project = await projectAccess(projectId, user.id, true);
     await assertAssignable(project.workspaceId, data.assigneeId);
     const [current] = await db
-      .select({ sprintId: tasks.sprintId })
+      .select({ sprintId: tasks.sprintId, status: tasks.status })
       .from(tasks)
       .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
     // A task may stay in the (possibly closed) sprint it already belongs to.
@@ -129,13 +130,21 @@ export async function updateTask(
     await db.transaction(async (tx) => {
       const [t] = await tx
         .update(tasks)
-        .set({ ...data, updatedAt: new Date() })
+        .set({
+          ...data,
+          completedAt:
+            data.status === "done"
+              ? sql`coalesce(${tasks.completedAt}, now())`
+              : null,
+          updatedAt: new Date(),
+        })
         .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)))
         .returning();
       if (!t) throw new UserError("Görev bulunamadı.");
+      const completed = t.status === "done" && current?.status !== "done";
       await recordActivity(tx, {
         projectId,
-        type: "task.updated",
+        type: completed ? "task.completed" : "task.updated",
         actorId: user.id,
         taskId: t.id,
         message: `#${t.number} güncellendi: ${t.title} → ${t.status}`,

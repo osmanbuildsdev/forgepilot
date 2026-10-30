@@ -72,3 +72,11 @@ export const planApproval = z.object({
   sprintWeeks: z.number().int().min(1).max(4),
   plan: projectPlan,
 });
+
+// A short narrative on top of the deterministic daily brief.
+export const briefNarrative = z.object({
+  headline: z.string().trim().min(1).max(240),
+  focus: z.array(z.string().trim().min(1).max(240)).max(4),
+  watch: z.array(z.string().trim().min(1).max(240)).max(4),
+});
+export type BriefNarrative = z.infer<typeof briefNarrative>;

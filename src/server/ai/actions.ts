@@ -21,6 +21,8 @@ import { recordActivity } from "@/server/activity";
 import { planApproval, planRequest } from "@/features/ai/plan-schema";
 import { getAIProvider } from "./provider";
 import { consumeHourlyQuota } from "./quota";
+import { cachedBriefNarrative } from "./cache";
+import { dailyBrief } from "@/server/insights/service";
 
 const addDays = (iso: string, days: number) => {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -215,4 +217,47 @@ export async function createProjectFromPlan(input: unknown) {
     revalidatePath("/app", "layout");
     return projectId;
   });
+}
+
+// Generates at most one narrative per user per day; later calls reuse it.
+export async function generateBriefNarrative() {
+  return attempt(async () => {
+    const user = await requireUser();
+    const cached = await cachedBriefNarrative(user.id);
+    if (cached) return cached;
+    await consumeHourlyQuota(
+      `ai:brief:${user.id}`,
+      5,
+      "Saatlik AI özet sınırına ulaştın. Daha sonra tekrar dene.",
+    );
+    const brief = await dailyBrief(user.id);
+    const facts = {
+      date: brief.today,
+      completedLast24h: brief.completed.map(briefLine),
+      inProgress: brief.inProgress.map(briefLine),
+      dueTodayOrOverdue: brief.dueNow.map(briefLine),
+      blocked: brief.blocked.map(briefLine),
+      risks: brief.risks.map((r) => `${r.projectName}: ${r.detail}`),
+    };
+    const provider = getAIProvider();
+    const narrative = await provider.summarizeActivity(facts);
+    await db.insert(aiGenerations).values({
+      userId: user.id,
+      kind: "daily_brief",
+      model: provider.model,
+      input: facts,
+      output: narrative,
+      status: "succeeded",
+    });
+    return narrative;
+  });
+}
+
+function briefLine(t: {
+  projectKey: string;
+  number: number;
+  title: string;
+  dueDate: string | null;
+}) {
+  return `${t.projectKey}-${t.number} ${t.title}${t.dueDate ? ` (son tarih ${t.dueDate})` : ""}`;
 }

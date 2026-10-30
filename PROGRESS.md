@@ -47,7 +47,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 ### AI
 - [ ] AIProvider genişletme (proje planı eklendi; özet, sağlık, sonraki adım kaldı)
 - [x] AI proje üretici (`/app/projects/new/ai`): plan önizleme ve düzenleme, onayla proje + milestone + sprint + görev oluşturma
-- [ ] Günlük özet (önbellekli)
+- [x] Günlük özet: veriden belirlenimci bölümler + günde bir kez önbelleğe alınan isteğe bağlı AI anlatımı
 - [ ] Copilot
 - [ ] Sprint planlama
 - [x] `ai_generations` kaydı ve saatlik kota (görev önerisi 10, proje planı 5)
@@ -66,7 +66,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Redis + BullMQ worker
 
 ### Analiz ve ürün
-- [ ] Algoritmik proje sağlık skoru
+- [x] Algoritmik proje sağlık skoru (6 açıklanabilir faktör, günlük anlık görüntü, mini grafik)
 - [ ] Bildirimler
 - [ ] Ctrl+K komut paleti ve arama
 - [ ] Raporlar ve grafikler
@@ -95,3 +95,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Sprint ve milestone yönetimi, yol haritası | Migration 0007; son tarih doğrulamasındaki hata da düzeltildi |
 | 2026-10-30 | Sunucu işlemlerinde hata yönetimi | Next.js üretimde hata mesajlarını gizlediği için işlemler { ok, error } döndürüyor |
 | 2026-10-30 | AI proje üretici | Migration 0008; canlı Gemini ile henüz denenmedi |
+| 2026-10-30 | Proje sağlık skoru ve günlük özet | Migration 0009; görevlere tamamlanma zamanı ve task.completed olayı eklendi |

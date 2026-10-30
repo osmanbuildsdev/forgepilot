@@ -926,6 +926,104 @@ select:focus {
   color: var(--fg-muted);
 }
 
+/* Health and daily brief */
+.health-healthy {
+  --level: var(--success);
+}
+.health-warning {
+  --level: var(--warning);
+}
+.health-risk {
+  --level: var(--danger);
+}
+.badge.health-healthy,
+.badge.health-warning,
+.badge.health-risk {
+  color: var(--level);
+}
+.health-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.health-score {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.health-score strong {
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.health-factors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.health-factors li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 9px 0;
+  font-size: 13px;
+}
+.health-factors li + li {
+  border-top: 1px solid var(--border);
+}
+.health-factors .dot {
+  margin-top: 6px;
+  color: var(--level);
+}
+.health-factors strong {
+  display: block;
+  font-weight: 500;
+}
+.health-factors .muted {
+  font-size: 12px;
+}
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+.brief-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 8px;
+}
+.brief-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.brief-section li a:hover {
+  color: var(--accent);
+}
+.brief-section li.health-warning,
+.brief-section li.health-risk {
+  padding-left: 10px;
+  border-left: 2px solid var(--level);
+}
+.brief-section .subtle {
+  font-size: 12px;
+}
+.ai-note ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
 /* Kanban */
 .board {
   display: grid;
@@ -1882,6 +1980,9 @@ select:focus {
   .workflow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .brief-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .dash-grid,
   .sprint-meters {
     grid-template-columns: minmax(0, 1fr);
@@ -1963,7 +2064,8 @@ select:focus {
   }
   .feature-grid,
   .pricing-grid,
-  .workflow {
+  .workflow,
+  .brief-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .footer-grid {

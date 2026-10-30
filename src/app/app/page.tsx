@@ -9,15 +9,20 @@ import {
 } from "@/server/projects/service";
 import { Button } from "@/components/ui/button";
 import { TaskRow } from "@/components/task-row";
+import { DailyBriefPanel } from "@/components/daily-brief";
+import { dailyBrief } from "@/server/insights/service";
+import { cachedBriefNarrative } from "@/server/ai/cache";
 
 export default async function Page() {
   const user = await requireUser();
-  const [spaces, projects, mine] = await Promise.all([
-    userWorkspaces(user.id),
+  const spaces = await userWorkspaces(user.id);
+  if (!spaces.length) redirect("/onboarding");
+  const [projects, mine, brief, narrative] = await Promise.all([
     projectSummaries(user.id),
     myOpenTasks(user.id, 8),
+    dailyBrief(user.id),
+    cachedBriefNarrative(user.id),
   ]);
-  if (!spaces.length) redirect("/onboarding");
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const overdue = projects.reduce((n, p) => n + p.overdue, 0);
@@ -66,6 +71,12 @@ export default async function Page() {
           <small>son tarihi geçmiş ve bitmemiş</small>
         </div>
       </div>
+
+      <DailyBriefPanel
+        brief={brief}
+        narrative={narrative}
+        aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
+      />
 
       <div className="dash-grid">
         <section className="panel">
