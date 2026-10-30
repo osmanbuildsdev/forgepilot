@@ -57,7 +57,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] documents ve document_versions tabloları (şablon tabloları şablon işiyle gelecek)
 - [x] .md içe aktarma (sürükle-bırak), editör + canlı önizleme + içindekiler, .md dışa aktarma, çakışma korumalı kayıt
 - [ ] Şablonlar ve AI ile şablon doldurma
-- [ ] Diff (sürüm geçmişi ve geri yükleme yapıldı)
+- [x] Sürüm geçmişi, satır bazlı diff ve geri yükleme
 
 ### GitHub ve arka plan
 - [ ] GitHub App, installation, repo bağlama
@@ -99,3 +99,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Bildirim merkezi | Migration 0010; kişi kendi işlemi için bildirim almaz |
 | 2026-10-30 | Ctrl+K komut paleti ve arama | Türkçe noktalı/noktasız i araması için normalleştirme eklendi |
 | 2026-10-30 | Markdown doküman sistemi (1. aşama) | Migration 0011; güvenli HTML önizleme, sürüm geçmişi ve geri yükleme |
+| 2026-10-30 | Doküman sürümleri arası diff | Uzun değişmemiş bölümler daraltılır |

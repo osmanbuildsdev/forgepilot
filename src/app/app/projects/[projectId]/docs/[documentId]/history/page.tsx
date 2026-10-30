@@ -16,6 +16,8 @@ import {
 import { canWrite } from "@/server/permissions";
 import { renderMarkdown } from "@/features/docs/markdown";
 import { RestoreVersion } from "@/features/docs/restore-version";
+import { diffMarkdown } from "@/features/docs/diff";
+import { DiffView } from "@/components/diff-view";
 
 export const metadata: Metadata = { title: "Doküman geçmişi" };
 
@@ -33,7 +35,7 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ projectId: string; documentId: string }>;
-  searchParams: Promise<{ v?: string }>;
+  searchParams: Promise<{ v?: string; view?: string }>;
 }) {
   const { projectId, documentId } = await params;
   if (
@@ -49,9 +51,15 @@ export default async function Page({
     workspaceAccess(project.workspaceId, user.id),
     documentHistory(documentId),
   ]);
-  const requested = Number((await searchParams).v);
+  const query = await searchParams;
+  const requested = Number(query.v);
   const selected = Number.isInteger(requested) ? requested : doc.currentVersion;
-  const version = await getVersion(documentId, selected);
+  // "Değişiklikler" compares the selected version with the one before it.
+  const showDiff = query.view !== "content" && selected > 1;
+  const [version, previous] = await Promise.all([
+    getVersion(documentId, selected),
+    showDiff ? getVersion(documentId, selected - 1) : null,
+  ]);
   const base = `/app/projects/${projectId}/docs/${documentId}`;
   return (
     <div className="stack" style={{ gap: 16 }}>
@@ -112,13 +120,45 @@ export default async function Page({
                     />
                   )}
               </div>
-              <article
-                className="markdown"
-                // Sanitised by renderMarkdown.
-                dangerouslySetInnerHTML={{
-                  __html: renderMarkdown(version.contentMarkdown),
-                }}
-              />
+              {selected > 1 && (
+                <div className="segmented" style={{ marginBottom: 16 }}>
+                  <Link
+                    href={`${base}/history?v=${selected}`}
+                    className={showDiff ? "active" : ""}
+                  >
+                    Değişiklikler (sürüm {selected - 1} → {selected})
+                  </Link>
+                  <Link
+                    href={`${base}/history?v=${selected}&view=content`}
+                    className={showDiff ? "" : "active"}
+                  >
+                    İçerik
+                  </Link>
+                </div>
+              )}
+              {showDiff && previous ? (
+                <>
+                  {previous.title !== version.title && (
+                    <p className="muted" style={{ marginBottom: 10 }}>
+                      Başlık: <del>{previous.title}</del> → {version.title}
+                    </p>
+                  )}
+                  <DiffView
+                    diff={diffMarkdown(
+                      previous.contentMarkdown,
+                      version.contentMarkdown,
+                    )}
+                  />
+                </>
+              ) : (
+                <article
+                  className="markdown"
+                  // Sanitised by renderMarkdown.
+                  dangerouslySetInnerHTML={{
+                    __html: renderMarkdown(version.contentMarkdown),
+                  }}
+                />
+              )}
             </>
           ) : (
             <p className="subtle">Sürüm bulunamadı.</p>

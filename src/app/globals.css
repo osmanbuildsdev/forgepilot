@@ -1320,6 +1320,7 @@ select:focus {
   border-radius: var(--radius);
   background: var(--surface-2);
 }
+.segmented a,
 .segmented button {
   height: 26px;
   padding: 0 10px;
@@ -1330,6 +1331,11 @@ select:focus {
   font-size: 12px;
   font-weight: 500;
 }
+.segmented a {
+  display: inline-flex;
+  align-items: center;
+}
+.segmented a.active,
 .segmented button.active {
   background: var(--surface);
   color: var(--fg);
@@ -1503,6 +1509,55 @@ select:focus {
   border: 0;
   border-top: 1px solid var(--border);
   margin: 1.6em 0;
+}
+.diff-summary {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.diff-add {
+  color: var(--success);
+}
+.diff-del {
+  color: var(--danger);
+}
+.diff pre {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--surface);
+}
+.diff pre > span {
+  display: block;
+  padding: 0 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.diff-sign {
+  display: inline-block;
+  width: 16px;
+  color: var(--fg-subtle);
+  user-select: none;
+}
+.diff-added {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+.diff-removed {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.diff-gap {
+  color: var(--fg-subtle);
+  background: var(--surface-2);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 2px 12px !important;
 }
 .history-layout {
   display: grid;
