@@ -15,6 +15,10 @@ import { ThemeToggle } from "./theme-provider";
 import { Button } from "./ui/button";
 import { authClient } from "@/lib/auth-client";
 import { NotificationBell } from "@/features/notifications/notification-bell";
+import {
+  CommandPalette,
+  SearchTrigger,
+} from "@/features/search/command-palette";
 
 type ShellProject = { id: string; name: string; key: string };
 
@@ -161,6 +165,7 @@ export function AppShell({
             ))}
           </nav>
           <div className="row" style={{ gap: 6 }}>
+            <SearchTrigger />
             <NotificationBell unread={unread} />
             <ThemeToggle />
             <Button size="sm" variant="outline" asChild>
@@ -172,6 +177,7 @@ export function AppShell({
           </div>
         </header>
         <div className="app-content">{children}</div>
+        <CommandPalette />
       </div>
     </div>
   );

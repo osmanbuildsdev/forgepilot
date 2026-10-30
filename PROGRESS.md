@@ -68,7 +68,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 ### Analiz ve ürün
 - [x] Algoritmik proje sağlık skoru (6 açıklanabilir faktör, günlük anlık görüntü, mini grafik)
 - [x] Bildirimler: görev atama, atanmış göreve yorum, sprint başlangıcı, davetin kabulü; zil menüsü ve gelen kutusu (zamana bağlı bildirimler arka plan işiyle gelecek)
-- [ ] Ctrl+K komut paleti ve arama
+- [x] Ctrl+K komut paleti: görev (başlık veya FORGE-24), proje ve kişi araması, gezinme komutları, Türkçe ı/İ uyumlu arama (doküman araması Docs ile gelecek)
 - [ ] Raporlar ve grafikler
 - [ ] Ayarlar sayfaları, pricing, forgot-password
 - [x] Landing sayfası yeniden tasarlandı (ürün önizlemesi, parallax, özellikler, iş akışı, GitHub, fiyatlandırma, footer)
@@ -97,3 +97,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | AI proje üretici | Migration 0008; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | Proje sağlık skoru ve günlük özet | Migration 0009; görevlere tamamlanma zamanı ve task.completed olayı eklendi |
 | 2026-10-30 | Bildirim merkezi | Migration 0010; kişi kendi işlemi için bildirim almaz |
+| 2026-10-30 | Ctrl+K komut paleti ve arama | Türkçe noktalı/noktasız i araması için normalleştirme eklendi |
