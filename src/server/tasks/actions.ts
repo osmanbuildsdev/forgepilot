@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { subtasks, taskDependencies, tasks } from "@/server/db/schema";
 import { recordActivity } from "@/server/activity";
 import { requireUser, projectAccess } from "@/server/projects/service";
+import { taskLinks } from "@/server/github/queries";
 
 const subtaskTitle = z.string().trim().min(1).max(200);
 const MAX_SUBTASKS = 50;
@@ -40,7 +41,7 @@ export async function taskDetails(projectId: string, taskId: string) {
     z.uuid().parse(taskId);
     await access(projectId);
     await taskInProject(projectId, taskId);
-    const [items, blockers] = await Promise.all([
+    const [items, blockers, github] = await Promise.all([
       db
         .select({ id: subtasks.id, title: subtasks.title, done: subtasks.done })
         .from(subtasks)
@@ -57,8 +58,9 @@ export async function taskDetails(projectId: string, taskId: string) {
         .innerJoin(tasks, eq(tasks.id, taskDependencies.dependsOnId))
         .where(eq(taskDependencies.taskId, taskId))
         .orderBy(asc(tasks.number)),
+      taskLinks(taskId),
     ]);
-    return { subtasks: items, blockers };
+    return { subtasks: items, blockers, github };
   });
 }
 

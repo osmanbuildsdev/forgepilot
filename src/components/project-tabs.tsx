@@ -6,6 +6,7 @@ const tabs = [
   ["/sprints", "Sprintler"],
   ["/roadmap", "Yol haritası"],
   ["/docs", "Dokümanlar"],
+  ["/github", "GitHub"],
   ["/settings", "Ayarlar"],
 ] as const;
 

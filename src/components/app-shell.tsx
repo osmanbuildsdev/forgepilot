@@ -10,6 +10,7 @@ import {
   Plus,
   Inbox,
   FileText,
+  GitBranch,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
@@ -29,6 +30,7 @@ const nav = [
   { href: "/app/inbox", label: "Gelen kutusu", icon: Inbox },
   { href: "/app/projects", label: "Projeler", icon: FolderKanban, exact: true },
   { href: "/app/docs", label: "Dokümanlar", icon: FileText },
+  { href: "/app/github", label: "GitHub", icon: GitBranch },
   { href: "/app/settings/members", label: "Üyeler", icon: Users },
 ];
 
@@ -39,12 +41,13 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path.startsWith("/app/docs/templates"))
     return ["Dokümanlar", "Şablonlar"];
   if (path.startsWith("/app/docs")) return ["Dokümanlar"];
+  if (path.startsWith("/app/github")) return ["GitHub"];
   if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
   if (path === "/app/projects/new/ai")
     return ["Projeler", "Yeni proje", "AI ile"];
   if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
   const match = path.match(
-    /^\/app\/projects\/([^/]+)(?:\/(board|sprints|roadmap|docs|settings))?/,
+    /^\/app\/projects\/([^/]+)(?:\/(board|sprints|roadmap|docs|github|settings))?/,
   );
   if (match) {
     const p = projects.find((x) => x.id === match[1]);
@@ -53,6 +56,7 @@ function crumbs(path: string, projects: ShellProject[]) {
       sprints: "Sprintler",
       roadmap: "Yol haritası",
       docs: "Dokümanlar",
+      github: "GitHub",
       settings: "Ayarlar",
     }[match[2] ?? ""];
     return ["Projeler", p?.name ?? "Proje", ...(sub ? [sub] : [])];

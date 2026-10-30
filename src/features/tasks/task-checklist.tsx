@@ -2,7 +2,14 @@
 import { unwrap, errorMessage, type ActionData } from "@/lib/action-result";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, X } from "lucide-react";
+import { GitCommitHorizontal, GitPullRequest, Lock, X } from "lucide-react";
+import { SuggestionButtons } from "@/features/github/suggestion-buttons";
+
+const prStateLabels: Record<string, string> = {
+  open: "Açık",
+  closed: "Kapalı",
+  merged: "Birleştirildi",
+};
 import {
   taskDetails,
   addSubtask,
@@ -223,6 +230,58 @@ export function TaskChecklist({
           </select>
         )}
       </section>
+      {data.github.length > 0 && (
+        <section aria-labelledby="github-title">
+          <h3 id="github-title">GitHub</h3>
+          <ul className="checklist">
+            {data.github.map((l) => (
+              <li
+                key={l.id}
+                style={{ alignItems: "flex-start", padding: "6px 4px" }}
+              >
+                <span style={{ minWidth: 0, display: "grid", gap: 4 }}>
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="row"
+                    style={{ gap: 8 }}
+                  >
+                    {l.kind === "pull_request" ? (
+                      <GitPullRequest size={14} className="subtle" />
+                    ) : (
+                      <GitCommitHorizontal size={14} className="subtle" />
+                    )}
+                    <span className="mono subtle" style={{ fontSize: 12 }}>
+                      {l.kind === "pull_request"
+                        ? `#${l.ref}`
+                        : l.ref.slice(0, 7)}
+                    </span>
+                    <span className="truncate">{l.title}</span>
+                    {l.state && (
+                      <span className="badge">
+                        {prStateLabels[l.state] ?? l.state}
+                      </span>
+                    )}
+                  </a>
+                  {l.suggestion === "pending" && canWrite && (
+                    <span className="suggestion">
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        Bu PR birleştirildi; görev tamamlanmış olabilir.
+                      </span>
+                      <SuggestionButtons
+                        projectId={projectId}
+                        linkId={l.id}
+                        onDone={load}
+                      />
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}

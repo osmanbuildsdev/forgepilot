@@ -65,7 +65,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] GitHub App kurulum dönüşü (imzalı state + GitHub üzerinden sahiplik doğrulaması), installation ve repo kaydı, repo-proje bağlama (sunucu tarafı)
 - [x] İmzalı (HMAC-SHA256) ve idempotent webhook, ham olay kaydı ve hata durumu
 - [x] Commit, PR ve check kaydı; commit mesajı, PR başlığı/açıklaması ve dal adındaki görev anahtarlarıyla eşleme; birleşen PR için onay bekleyen tamamlanma önerisi
-- [ ] GitHub arayüzü (bağlantı sayfası, proje GitHub sekmesi, görev panelinde commit/PR ve öneri onayı)
+- [x] GitHub arayüzü: bağlantı sayfası ve kurulum rehberi, repo-proje bağlama, proje GitHub sekmesi (commit, PR, check durumu), görev panelinde commit/PR ve tamamlanma önerisi onayı
 - [ ] Redis + BullMQ worker
 
 ### Analiz ve ürün
@@ -106,3 +106,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Doküman şablonları | Migration 0012; verisi olmayan yer tutucular tahmin edilmez, görünür kalır |
 | 2026-10-30 | Doküman AI işlemleri | Başlıklar ve sıra korunur; uygulanan içerik sunucudaki öneriden alınır; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | GitHub entegrasyonu (1. aşama, sunucu) | Migration 0013; AI veya GitHub görevi kendiliğinden kapatmaz |
+| 2026-10-30 | GitHub arayüzü | Gerçek GitHub App ile henüz denenmedi; yerelde webhook için tünel gerekir |
