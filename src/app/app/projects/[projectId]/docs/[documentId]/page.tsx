@@ -12,15 +12,21 @@ import { getDocument, resolveTaskRefs } from "@/server/docs/queries";
 import { canWrite } from "@/server/permissions";
 import { DocEditor } from "@/features/docs/doc-editor";
 import type { MarkdownStructure } from "@/features/docs/markdown";
+import { DOC_ACTIONS, type DocAction } from "@/features/ai/doc-schema";
 
 export const metadata: Metadata = { title: "Doküman" };
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string; documentId: string }>;
+  searchParams: Promise<{ ai?: string }>;
 }) {
   const { projectId, documentId } = await params;
+  const { ai } = await searchParams;
+  // ?ai=fill_empty opens the AI panel right after creating from a template.
+  const initialAi = ai && ai in DOC_ACTIONS ? (ai as DocAction) : undefined;
   if (
     !z.uuid().safeParse(projectId).success ||
     !z.uuid().safeParse(documentId).success
@@ -52,6 +58,8 @@ export default async function Page({
         projectKey={project.key}
         canWrite={canWrite(me.role)}
         references={references}
+        aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
+        initialAi={initialAi}
         doc={{
           id: doc.id,
           title: doc.title,

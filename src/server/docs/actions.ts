@@ -8,7 +8,7 @@ import { documents, documentVersions } from "@/server/db/schema";
 import { recordActivity } from "@/server/activity";
 import { requireUser, projectAccess } from "@/server/projects/service";
 import { parseMarkdown } from "@/features/docs/markdown";
-import { insertDocument } from "./store";
+import { insertDocument, writeVersion } from "./store";
 
 // 500 KB of text is far beyond any real document and keeps parsing cheap.
 const MAX_MARKDOWN = 500_000;
@@ -96,52 +96,7 @@ export async function saveDocument(
       })
       .parse(input);
     const { user } = await writer(projectId);
-    const version = await db.transaction(async (tx) => {
-      const [doc] = await tx
-        .select()
-        .from(documents)
-        .where(
-          and(eq(documents.id, documentId), eq(documents.projectId, projectId)),
-        )
-        .for("update");
-      if (!doc) throw new UserError("Doküman bulunamadı.");
-      if (doc.currentVersion !== data.baseVersion)
-        throw new UserError(
-          `Bu doküman sen düzenlerken güncellendi (sürüm ${doc.currentVersion}). Değişikliklerini kopyalayıp sayfayı yenile.`,
-        );
-      if (doc.title === data.title && doc.contentMarkdown === data.content)
-        return doc.currentVersion;
-      const next = doc.currentVersion + 1;
-      await tx
-        .update(documents)
-        .set({
-          title: data.title,
-          contentMarkdown: data.content,
-          structure: parseMarkdown(data.content),
-          currentVersion: next,
-          updatedBy: user.id,
-          updatedAt: new Date(),
-        })
-        .where(eq(documents.id, documentId));
-      await tx.insert(documentVersions).values({
-        documentId,
-        versionNumber: next,
-        title: data.title,
-        contentMarkdown: data.content,
-        note: data.note,
-        createdBy: user.id,
-      });
-      await recordActivity(tx, {
-        projectId,
-        type: "document.updated",
-        actorId: user.id,
-        message: `"${data.title}" dokümanı güncellendi (sürüm ${next}).`,
-        metadata: { documentId, version: next },
-      });
-      return next;
-    });
-    revalidatePath("/app", "layout");
-    return version;
+    return writeVersion({ projectId, documentId, userId: user.id, ...data });
   });
 }
 

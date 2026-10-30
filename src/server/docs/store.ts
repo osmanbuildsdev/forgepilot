@@ -1,5 +1,7 @@
 import "server-only";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { UserError } from "@/server/errors";
 import { db } from "@/server/db";
 import { documents, documentVersions } from "@/server/db/schema";
 import { recordActivity } from "@/server/activity";
@@ -54,4 +56,67 @@ export async function insertDocument(d: {
   });
   revalidatePath("/app", "layout");
   return id;
+}
+
+// Saves a new version if the content changed. `baseVersion` is the version
+// the change was based on; a mismatch means someone else saved in between.
+export async function writeVersion(v: {
+  projectId: string;
+  documentId: string;
+  userId: string;
+  title?: string;
+  content: string;
+  baseVersion: number;
+  note: string;
+}) {
+  const version = await db.transaction(async (tx) => {
+    const [doc] = await tx
+      .select()
+      .from(documents)
+      .where(
+        and(
+          eq(documents.id, v.documentId),
+          eq(documents.projectId, v.projectId),
+        ),
+      )
+      .for("update");
+    if (!doc) throw new UserError("Doküman bulunamadı.");
+    if (doc.currentVersion !== v.baseVersion)
+      throw new UserError(
+        `Bu doküman sen düzenlerken güncellendi (sürüm ${doc.currentVersion}). Değişikliklerini kopyalayıp sayfayı yenile.`,
+      );
+    const title = v.title ?? doc.title;
+    if (doc.title === title && doc.contentMarkdown === v.content)
+      return doc.currentVersion;
+    const next = doc.currentVersion + 1;
+    await tx
+      .update(documents)
+      .set({
+        title,
+        contentMarkdown: v.content,
+        structure: parseMarkdown(v.content),
+        currentVersion: next,
+        updatedBy: v.userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, v.documentId));
+    await tx.insert(documentVersions).values({
+      documentId: v.documentId,
+      versionNumber: next,
+      title,
+      contentMarkdown: v.content,
+      note: v.note,
+      createdBy: v.userId,
+    });
+    await recordActivity(tx, {
+      projectId: v.projectId,
+      type: "document.updated",
+      actorId: v.userId,
+      message: `"${title}" dokümanı güncellendi (sürüm ${next}).`,
+      metadata: { documentId: v.documentId, version: next },
+    });
+    return next;
+  });
+  revalidatePath("/app", "layout");
+  return version;
 }

@@ -57,7 +57,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] documents ve document_versions tabloları (şablon tabloları şablon işiyle gelecek)
 - [x] .md içe aktarma (sürükle-bırak), editör + canlı önizleme + içindekiler, .md dışa aktarma, çakışma korumalı kayıt
 - [x] Şablonlar: 10 yerleşik şablon, çalışma alanı şablonları (kopyala, düzenle, sil, .md indir), dokümanı şablon olarak kaydetme, yer tutucuların proje verisinden doldurulması
-- [ ] AI ile şablon doldurma ve doküman içi AI işlemleri
+- [x] Doküman içi AI: boş bölümleri doldur, bölüm yaz, iyileştir, genişlet, kısalt, projeden güncelle; AI yalnızca bölüm gövdesi yazar, Markdown sunucuda yeniden kurulur, diff önizlemesinden sonra uygulanır
+- [x] Şablondan oluşturup AI ile boş bölümleri doldurma akışı
 - [x] Sürüm geçmişi, satır bazlı diff ve geri yükleme
 
 ### GitHub ve arka plan
@@ -102,3 +103,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Markdown doküman sistemi (1. aşama) | Migration 0011; güvenli HTML önizleme, sürüm geçmişi ve geri yükleme |
 | 2026-10-30 | Doküman sürümleri arası diff | Uzun değişmemiş bölümler daraltılır |
 | 2026-10-30 | Doküman şablonları | Migration 0012; verisi olmayan yer tutucular tahmin edilmez, görünür kalır |
+| 2026-10-30 | Doküman AI işlemleri | Başlıklar ve sıra korunur; uygulanan içerik sunucudaki öneriden alınır; canlı Gemini ile henüz denenmedi |

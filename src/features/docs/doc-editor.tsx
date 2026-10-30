@@ -2,7 +2,15 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, History, LayoutTemplate, Trash2 } from "lucide-react";
+import {
+  Download,
+  History,
+  LayoutTemplate,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import type { DocAction } from "@/features/ai/doc-schema";
+import { DocAi } from "./doc-ai";
 import { saveDocument, deleteDocument } from "@/server/docs/actions";
 import { saveDocumentAsTemplate } from "@/server/docs/template-actions";
 import { unwrap, errorMessage } from "@/lib/action-result";
@@ -17,13 +25,20 @@ export function DocEditor({
   doc,
   canWrite,
   references,
+  aiEnabled,
+  initialAi,
 }: {
   projectId: string;
   projectKey: string;
   doc: { id: string; title: string; content: string; version: number };
   canWrite: boolean;
   references: { id: string; number: number; title: string; status: string }[];
+  aiEnabled: boolean;
+  initialAi?: DocAction;
 }) {
+  const [aiOpen, setAiOpen] = useState(
+    Boolean(initialAi && aiEnabled && canWrite),
+  );
   const router = useRouter();
   const [title, setTitle] = useState(doc.title);
   const [content, setContent] = useState(doc.content);
@@ -128,6 +143,24 @@ export function DocEditor({
               <Download size={14} /> .md
             </a>
           </Button>
+          {canWrite && aiEnabled && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              title={dirty ? "Önce değişikliklerini kaydet" : undefined}
+              onClick={() => {
+                if (dirty)
+                  setError("AI işlemlerinden önce değişikliklerini kaydet.");
+                else {
+                  setError("");
+                  setAiOpen(true);
+                }
+              }}
+            >
+              <Sparkles size={14} /> AI
+            </Button>
+          )}
           {canWrite && (
             <Button size="sm" disabled={!dirty || busy} onClick={save}>
               {busy ? "Kaydediliyor…" : "Kaydet"}
@@ -135,6 +168,24 @@ export function DocEditor({
           )}
         </span>
       </div>
+      {aiOpen && (
+        <DocAi
+          projectId={projectId}
+          documentId={doc.id}
+          content={saved.content}
+          version={version}
+          initialAction={initialAi}
+          onClose={() => setAiOpen(false)}
+          onApplied={(next, nextVersion) => {
+            setContent(next);
+            setSaved({ title, content: next });
+            setVersion(nextVersion);
+            setStatus(`AI değişikliği uygulandı · sürüm ${nextVersion}`);
+            setAiOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
       {error && (
         <p className="error" role="alert" style={{ marginBottom: 12 }}>
           {error}

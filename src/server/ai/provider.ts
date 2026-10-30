@@ -10,6 +10,11 @@ import {
   type PlanRequest,
   type ProjectPlan,
 } from "@/features/ai/plan-schema";
+import {
+  sectionDraft,
+  type DocAction,
+  type SectionDraft,
+} from "@/features/ai/doc-schema";
 
 export interface AIProvider {
   readonly model: string;
@@ -21,6 +26,7 @@ export interface AIProvider {
   }): Promise<z.infer<typeof generatedTasks>>;
   generateProjectPlan(request: PlanRequest): Promise<ProjectPlan>;
   summarizeActivity(facts: unknown): Promise<BriefNarrative>;
+  writeSections(request: SectionRequest): Promise<SectionDraft>;
 }
 
 const DATA_ONLY =
@@ -110,7 +116,31 @@ export class GeminiProvider implements AIProvider {
       30000,
     );
   }
+
+  writeSections(request: SectionRequest) {
+    return this.structured(
+      sectionDraft,
+      [
+        "You write and edit sections of a software project document, in Turkish unless the document is clearly in another language.",
+        DATA_ONLY,
+        "Return a new Markdown body only for the section ids listed in `targets`. Never include the section heading, never add new headings of the same or higher level, and never return ids that were not requested.",
+        "Use only facts from `project` and the document itself. Do not invent metrics, dates, people, code changes or completed work. When a fact is missing, write a short neutral note saying it is not yet known.",
+        "Keep the existing tone and formatting conventions (lists, tables, code blocks). Refer to tasks by their key, e.g. FORGE-24.",
+        "Action meanings: fill_empty and write_section write content for empty sections; improve clarifies and fixes without changing meaning; expand adds useful detail; shorten keeps the essentials; update_from_project changes only statements that contradict the project facts and leaves the rest of the wording intact.",
+      ].join(" "),
+      request,
+      90000,
+    );
+  }
 }
+
+export type SectionRequest = {
+  action: DocAction;
+  instruction: string;
+  document: { title: string; outline: string[] };
+  targets: { id: number; path: string; body: string }[];
+  project: unknown;
+};
 
 export function getAIProvider(): AIProvider {
   return new GeminiProvider();

@@ -2,7 +2,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Copy, Download, FileText, Pencil, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Download,
+  FileText,
+  Pencil,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import {
   createFromTemplate,
   duplicateBuiltin,
@@ -39,12 +46,14 @@ export function TemplateGallery({
   projects,
   workspaces,
   defaultProject,
+  aiEnabled,
 }: {
   builtins: Builtin[];
   custom: Custom[];
   projects: { id: string; name: string; workspaceId: string }[];
   workspaces: { id: string; name: string }[];
   defaultProject: string;
+  aiEnabled: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -301,13 +310,24 @@ export function TemplateGallery({
                   Tüm otomatik alanlar proje verisiyle dolduruldu.
                 </p>
               )}
-              <Button asChild>
-                <Link
-                  href={`/app/projects/${created.projectId}/docs/${created.id}`}
-                >
-                  Dokümanı aç
-                </Link>
-              </Button>
+              <div className="row" style={{ gap: 8 }}>
+                <Button variant={aiEnabled ? "outline" : "default"} asChild>
+                  <Link
+                    href={`/app/projects/${created.projectId}/docs/${created.id}`}
+                  >
+                    Dokümanı aç
+                  </Link>
+                </Button>
+                {aiEnabled && (
+                  <Button asChild>
+                    <Link
+                      href={`/app/projects/${created.projectId}/docs/${created.id}?ai=fill_empty`}
+                    >
+                      <Sparkles size={14} /> Boş bölümleri AI ile doldur
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <form

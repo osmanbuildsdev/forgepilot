@@ -54,6 +54,7 @@ export default async function Page({
         </div>
       </header>
       <TemplateGallery
+        aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
         defaultProject={
           projectRows.some((p) => p.project.id === project) ? project! : ""
         }
