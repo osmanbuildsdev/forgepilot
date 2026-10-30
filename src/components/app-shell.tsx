@@ -13,6 +13,7 @@ import {
   GitBranch,
   Sparkles,
   BarChart3,
+  Settings,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
@@ -48,7 +49,17 @@ function crumbs(path: string, projects: ShellProject[]) {
   if (path.startsWith("/app/github")) return ["GitHub"];
   if (path.startsWith("/app/copilot")) return ["Copilot"];
   if (path.startsWith("/app/reports")) return ["Raporlar"];
-  if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
+  if (path.startsWith("/app/settings")) {
+    const section = {
+      profile: "Profil",
+      workspace: "Çalışma alanı",
+      members: "Üyeler",
+      integrations: "Entegrasyonlar",
+      ai: "AI",
+      billing: "Plan",
+    }[path.split("/")[3] ?? ""];
+    return ["Ayarlar", ...(section ? [section] : [])];
+  }
   if (path === "/app/projects/new/ai")
     return ["Projeler", "Yeni proje", "AI ile"];
   if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
@@ -150,6 +161,15 @@ export function AppShell({
           </nav>
         </div>
         <div className="sidebar-bottom">
+          <nav aria-label="Ayarlar" style={{ marginBottom: 6 }}>
+            <Link
+              href="/app/settings/profile"
+              className={path.startsWith("/app/settings") ? "active" : ""}
+            >
+              <Settings size={16} />
+              Ayarlar
+            </Link>
+          </nav>
           <div className="user-card">
             <span className="avatar">{user.name.charAt(0).toUpperCase()}</span>
             <span className="user-meta">

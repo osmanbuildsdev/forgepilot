@@ -75,7 +75,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Bildirimler: görev atama, atanmış göreve yorum, sprint başlangıcı, davetin kabulü; zil menüsü ve gelen kutusu (zamana bağlı bildirimler arka plan işiyle gelecek)
 - [x] Ctrl+K komut paleti: görev (başlık veya FORGE-24), proje ve kişi araması, gezinme komutları, Türkçe ı/İ uyumlu arama (doküman araması Docs ile gelecek)
 - [x] Raporlar (`/app/reports`): haftalık ilerleme, sprint tamamlama, ekip iş yükü, GitHub hareketi, geciken görevler; proje ve 7/30/90 gün filtresi; her grafikte ipucu ve tablo görünümü, renk paleti iki temada da doğrulandı
-- [ ] Ayarlar sayfaları, pricing, forgot-password
+- [x] Ayarlar: profil (ad, parola, diğer oturumları kapatma), çalışma alanı (yeniden adlandırma, onaylı silme), üyeler, entegrasyon durumu, AI kullanımı, plan (ödeme yok, açıkça belirtiliyor)
+- [ ] forgot-password (e-posta gönderimi gerektiriyor)
 - [x] Landing sayfası yeniden tasarlandı (ürün önizlemesi, parallax, özellikler, iş akışı, GitHub, fiyatlandırma, footer)
 - [x] Tasarım sistemi: renk tokenları, Geist fontu, açık/koyu tema, ortak bileşen stilleri
 - [x] Giriş ve kayıt sayfaları yeniden tasarlandı
@@ -113,3 +114,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | AI sprint planlama ve GitHub geliştirme özeti | Kapasite AI'a hesaplatılmaz; canlı Gemini ile henüz denenmedi |
 | 2026-10-30 | Arka plan işleri ve zamanlanmış bildirimler | Worker Next.js dışında çalışacak şekilde ayrıldı; gerçek Redis ile henüz denenmedi |
 | 2026-10-30 | Raporlar ve grafikler | Görsel kontrol, sunucudan istemciye fonksiyon geçirme hatasını yakaladı ve düzeltildi |
+| 2026-10-30 | Ayarlar sayfaları | Ücretli plan veya ödeme taklidi yok |

@@ -1,9 +1,12 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { WorkspacePicker } from "@/features/settings/workspace-picker";
 import { requireUser, userWorkspaces } from "@/server/projects/service";
 import { membersOverview } from "@/server/workspaces/queries";
 import { assignableRoles } from "@/server/permissions";
 import { MembersPanel } from "@/features/workspaces/members-panel";
+
+export const metadata: Metadata = { title: "Üyeler" };
 
 export default async function Page({
   searchParams,
@@ -18,27 +21,14 @@ export default async function Page({
   const { people, pending } = await membersOverview(current.id);
   return (
     <div className="stack">
-      <header className="page-heading">
-        <div>
-          <h1>Üyeler</h1>
-          <p className="muted">
-            {current.name} çalışma alanındaki kişiler ve bekleyen davetler.
-          </p>
-        </div>
-      </header>
-      {spaces.length > 1 && (
-        <nav className="tabs">
-          {spaces.map((w) => (
-            <Link
-              key={w.id}
-              href={`/app/settings/members?workspace=${w.id}`}
-              className={w.id === current.id ? "active" : ""}
-            >
-              {w.name}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <WorkspacePicker
+        base="/app/settings/members"
+        workspaces={spaces}
+        current={current.id}
+      />
+      <p className="muted">
+        {current.name} çalışma alanındaki kişiler ve bekleyen davetler.
+      </p>
       <MembersPanel
         workspaceId={current.id}
         myUserId={user.id}

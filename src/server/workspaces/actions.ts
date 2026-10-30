@@ -12,6 +12,7 @@ import {
   tasks,
   user as users,
   workspaceInvitations as invitations,
+  workspaces,
 } from "@/server/db/schema";
 import { requireUser, workspaceAccess } from "@/server/projects/service";
 import { canManageMembers, canManageRole } from "@/server/permissions";
@@ -234,6 +235,41 @@ export async function removeMember(workspaceId: string, memberId: string) {
           ),
         );
     });
+    revalidatePath("/app", "layout");
+  });
+}
+
+export async function renameWorkspace(workspaceId: string, input: unknown) {
+  return attempt(async () => {
+    const name = z.string().trim().min(2).max(100).parse(input);
+    await manager(workspaceId);
+    await db
+      .update(workspaces)
+      .set({ name, updatedAt: new Date() })
+      .where(eq(workspaces.id, workspaceId));
+    revalidatePath("/app", "layout");
+  });
+}
+
+// Deletes the workspace with all of its projects, tasks and documents. Only
+// owners may do this, and they confirm by typing the workspace name.
+export async function deleteWorkspace(
+  workspaceId: string,
+  confirmName: unknown,
+) {
+  return attempt(async () => {
+    z.uuid().parse(workspaceId);
+    const user = await requireUser();
+    const me = await workspaceAccess(workspaceId, user.id);
+    if (me.role !== "owner")
+      throw new UserError("Çalışma alanını yalnızca sahibi silebilir.");
+    const [workspace] = await db
+      .select({ name: workspaces.name })
+      .from(workspaces)
+      .where(eq(workspaces.id, workspaceId));
+    if (!workspace || confirmName !== workspace.name)
+      throw new UserError("Onay için çalışma alanının adını aynen yazmalısın.");
+    await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
     revalidatePath("/app", "layout");
   });
 }
