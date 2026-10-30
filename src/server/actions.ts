@@ -17,6 +17,7 @@ import {
   workspaceAccess,
   projectAccess,
   assertAssignable,
+  assertPlanningRefs,
 } from "@/server/projects/service";
 import {
   projectInput,
@@ -56,6 +57,7 @@ export async function saveTasks(projectId: string, input: unknown) {
   const project = await projectAccess(projectId, user.id, true);
   for (const id of new Set(data.tasks.map((t) => t.assigneeId)))
     await assertAssignable(project.workspaceId, id);
+  await assertPlanningRefs(projectId, data.tasks);
   await db.transaction(async (tx) => {
     const [p] = await tx
       .update(projects)
@@ -97,6 +99,12 @@ export async function updateTask(
   const user = await requireUser();
   const project = await projectAccess(projectId, user.id, true);
   await assertAssignable(project.workspaceId, data.assigneeId);
+  const [current] = await db
+    .select({ sprintId: tasks.sprintId })
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
+  // A task may stay in the (possibly closed) sprint it already belongs to.
+  await assertPlanningRefs(projectId, [data], current?.sprintId ?? null);
   await db.transaction(async (tx) => {
     const [t] = await tx
       .update(tasks)

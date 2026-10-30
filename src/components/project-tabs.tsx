@@ -3,15 +3,19 @@ import Link from "next/link";
 const tabs = [
   ["", "Genel bakış"],
   ["/board", "Kanban"],
+  ["/sprints", "Sprintler"],
+  ["/roadmap", "Yol haritası"],
   ["/settings", "Ayarlar"],
 ] as const;
+
+export type ProjectTab = (typeof tabs)[number][0];
 
 export function ProjectTabs({
   id,
   active,
 }: {
   id: string;
-  active: (typeof tabs)[number][0];
+  active: ProjectTab;
 }) {
   return (
     <nav className="tabs" aria-label="Proje sekmeleri">

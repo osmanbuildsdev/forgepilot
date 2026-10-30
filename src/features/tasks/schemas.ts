@@ -10,20 +10,20 @@ export const aiTaskInput = z.object({
     .default("backlog"),
 });
 const emptyToNull = (v: unknown) => (v === "" || v === undefined ? null : v);
+export const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((v) => !Number.isNaN(Date.parse(v)), "Geçersiz tarih");
+const optionalId = z.preprocess(emptyToNull, z.uuid().nullable());
 export const taskInput = aiTaskInput.extend({
   assigneeId: z.preprocess(emptyToNull, z.string().min(1).nullable()),
-  dueDate: z.preprocess(
-    emptyToNull,
-    z
-      .string()
-      .regex(/^d{4}-d{2}-d{2}$/)
-      .refine((v) => !Number.isNaN(Date.parse(v)))
-      .nullable(),
-  ),
+  dueDate: z.preprocess(emptyToNull, isoDate.nullable()),
   estimatePoints: z.preprocess(
     emptyToNull,
     z.coerce.number().int().min(0).max(100).nullable(),
   ),
+  sprintId: optionalId,
+  milestoneId: optionalId,
 });
 export const generatedTasks = z.object({
   tasks: z.array(aiTaskInput).min(1).max(15),
@@ -45,3 +45,19 @@ export const labelInput = z.object({
     .default("#6b7280"),
 });
 export const taskLabelIds = z.array(z.uuid()).max(20);
+export const sprintInput = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    goal: z.string().trim().max(1000).default(""),
+    startDate: isoDate,
+    endDate: isoDate,
+  })
+  .refine((s) => s.endDate >= s.startDate, {
+    message: "Bitiş tarihi başlangıçtan önce olamaz.",
+    path: ["endDate"],
+  });
+export const milestoneInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(2000).default(""),
+  dueDate: z.preprocess(emptyToNull, isoDate.nullable()),
+});

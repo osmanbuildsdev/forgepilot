@@ -12,6 +12,7 @@ import {
   jsonb,
   date,
   primaryKey,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 const dates = () => ({
@@ -144,6 +145,13 @@ export const tasks = pgTable(
     }),
     dueDate: date("due_date", { mode: "string" }),
     estimatePoints: integer("estimate_points"),
+    sprintId: uuid("sprint_id").references((): AnyPgColumn => sprints.id, {
+      onDelete: "set null",
+    }),
+    milestoneId: uuid("milestone_id").references(
+      (): AnyPgColumn => milestones.id,
+      { onDelete: "set null" },
+    ),
     createdBy: text("created_by")
       .notNull()
       .references(() => user.id),
@@ -153,7 +161,56 @@ export const tasks = pgTable(
     uniqueIndex("task_project_number").on(t.projectId, t.number),
     index("task_project_status").on(t.projectId, t.status),
     index("task_assignee").on(t.assigneeId),
+    index("task_sprint").on(t.sprintId),
+    index("task_milestone").on(t.milestoneId),
   ],
+);
+export const sprintStatusEnum = pgEnum("sprint_status", [
+  "planned",
+  "active",
+  "completed",
+]);
+export const sprints = pgTable(
+  "sprints",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    goal: text("goal").default("").notNull(),
+    startDate: date("start_date", { mode: "string" }).notNull(),
+    endDate: date("end_date", { mode: "string" }).notNull(),
+    status: sprintStatusEnum("status").default("planned").notNull(),
+    // Snapshot taken when the sprint closes, so velocity history stays
+    // stable even if tasks are edited or moved later.
+    committedPoints: integer("committed_points"),
+    completedPoints: integer("completed_points"),
+    completedTasks: integer("completed_tasks"),
+    retrospective: text("retrospective").default("").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [
+    index("sprint_project").on(t.projectId, t.startDate),
+    uniqueIndex("sprint_one_active")
+      .on(t.projectId)
+      .where(sql`${t.status} = 'active'`),
+  ],
+);
+export const milestones = pgTable(
+  "milestones",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description").default("").notNull(),
+    dueDate: date("due_date", { mode: "string" }),
+    ...dates(),
+  },
+  (t) => [index("milestone_project").on(t.projectId, t.dueDate)],
 );
 export const labels = pgTable(
   "labels",
@@ -191,6 +248,9 @@ export const ACTIVITY_TYPES = [
   "label.created",
   "comment.created",
   "project.updated",
+  "sprint.started",
+  "sprint.completed",
+  "milestone.created",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 export const ACTIVITY_SOURCES = ["user", "ai", "github", "system"] as const;
@@ -302,3 +362,5 @@ export const workspaceInvitations = pgTable(
 export type Task = typeof tasks.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type Label = typeof labels.$inferSelect;
+export type Sprint = typeof sprints.$inferSelect;
+export type Milestone = typeof milestones.$inferSelect;

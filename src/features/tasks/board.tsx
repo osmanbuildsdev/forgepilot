@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Sparkles } from "lucide-react";
-import type { Task, Label } from "@/server/db/schema";
+import type { Task, Label, Sprint } from "@/server/db/schema";
 import {
   saveTasks,
   updateTask,
@@ -124,6 +124,9 @@ export function Board({
   editable,
   aiEnabled,
   viewer,
+  sprints,
+  milestones,
+  initialSprint,
 }: {
   projectId: string;
   projectKey: string;
@@ -136,6 +139,9 @@ export function Board({
   editable: boolean;
   aiEnabled: boolean;
   viewer: { id: string; canModerate: boolean };
+  sprints: { id: string; name: string; status: Sprint["status"] }[];
+  milestones: { id: string; name: string }[];
+  initialSprint: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Task | "new" | null>(null);
@@ -143,6 +149,16 @@ export function Board({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sprintFilter, setSprintFilter] = useState(initialSprint);
+  // "all" shows everything, "none" the unscheduled pool, otherwise one sprint.
+  const visible =
+    sprintFilter === "all"
+      ? tasks
+      : tasks.filter((t) =>
+          sprintFilter === "none"
+            ? t.sprintId === null
+            : t.sprintId === sprintFilter,
+        );
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
@@ -181,12 +197,34 @@ export function Board({
         className="row between"
         style={{ marginBottom: 22, flexWrap: "wrap" }}
       >
-        <span className="muted">
-          {tasks.length} görev ·{" "}
-          {editable
-            ? "Sürükle veya görevden durumunu değiştir."
-            : "Salt okunur erişim."}
-        </span>
+        <div className="row" style={{ gap: 10 }}>
+          <select
+            aria-label="Sprint filtresi"
+            value={sprintFilter}
+            onChange={(e) => {
+              setSprintFilter(e.target.value);
+              const url = new URL(window.location.href);
+              if (e.target.value === "all") url.searchParams.delete("sprint");
+              else url.searchParams.set("sprint", e.target.value);
+              window.history.replaceState(null, "", url);
+            }}
+            style={{ width: "auto", height: 32 }}
+          >
+            <option value="all">Tüm görevler</option>
+            <option value="none">Sprinte atanmamış</option>
+            {sprints.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+                {s.status === "active" ? " (aktif)" : ""}
+                {s.status === "completed" ? " (tamamlandı)" : ""}
+              </option>
+            ))}
+          </select>
+          <span className="muted">
+            {visible.length} görev
+            {!editable && " · Salt okunur erişim"}
+          </span>
+        </div>
         {editable && (
           <div className="row">
             <Button
@@ -243,9 +281,9 @@ export function Board({
               key={status}
               status={status}
               title={title}
-              count={tasks.filter((t) => t.status === status).length}
+              count={visible.filter((t) => t.status === status).length}
             >
-              {tasks
+              {visible
                 .filter((t) => t.status === status)
                 .map((t) => (
                   <Card
@@ -265,7 +303,7 @@ export function Board({
                     disabled={!editable || busy}
                   />
                 ))}
-              {!tasks.some((t) => t.status === status) && (
+              {!visible.some((t) => t.status === status) && (
                 <p
                   className="muted"
                   style={{ fontSize: 11, padding: "10px 2px" }}
@@ -393,6 +431,53 @@ export function Board({
                   }
                   readOnly={!editable}
                 />
+              </label>
+            </div>
+            <div className="row">
+              <label className="field" style={{ flex: 1 }}>
+                Sprint
+                <select
+                  name="sprintId"
+                  defaultValue={
+                    editing === "new"
+                      ? sprintFilter !== "all" && sprintFilter !== "none"
+                        ? sprintFilter
+                        : ""
+                      : (editing.sprintId ?? "")
+                  }
+                  disabled={!editable}
+                >
+                  <option value="">Sprint yok</option>
+                  {sprints
+                    .filter(
+                      (s) =>
+                        s.status !== "completed" ||
+                        (editing !== "new" && s.id === editing.sprintId),
+                    )
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                        {s.status === "active" ? " (aktif)" : ""}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label className="field" style={{ flex: 1 }}>
+                Milestone
+                <select
+                  name="milestoneId"
+                  defaultValue={
+                    editing === "new" ? "" : (editing.milestoneId ?? "")
+                  }
+                  disabled={!editable}
+                >
+                  <option value="">Milestone yok</option>
+                  {milestones.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
             {editing !== "new" && labels.length > 0 && (

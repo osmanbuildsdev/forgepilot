@@ -39,7 +39,9 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Özel Kanban kolonları
 - [x] Proje ayarları: ad ve açıklama düzenleme, anahtarı yazarak onaylı silme (yalnızca sahip/yönetici)
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
-- [ ] Milestone, sprint, roadmap
+- [x] Sprintler (planla, başlat, tamamla; retrospektif, hız geçmişi, geride kalma uyarısı)
+- [x] Milestone'lar ve yol haritası (görevlerden hesaplanan ilerleme, gecikme işareti)
+- [x] Kanban'da sprint filtresi, görev formunda sprint ve milestone seçimi
 
 ### AI
 - [ ] AIProvider genişletme (proje planı, özet, sağlık, sonraki adım)
@@ -89,3 +91,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Görev yorumları ve görev detay paneli | Migration 0005; yorumlar aktivite geçmişine yazılır |
 | 2026-10-30 | Alt görevler ve görev bağımlılıkları | Migration 0006; döngüler sunucuda engellenir |
 | 2026-10-30 | Proje ayarları sekmesi | Proje anahtarı sabit; silme işlemi anahtar yazılarak onaylanır |
+| 2026-10-30 | Sprint ve milestone yönetimi, yol haritası | Migration 0007; son tarih doğrulamasındaki hata da düzeltildi |

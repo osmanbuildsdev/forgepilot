@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
-import { and, eq, desc, ne, sql } from "drizzle-orm";
+import { and, eq, desc, inArray, ne, sql } from "drizzle-orm";
 import { getAuth } from "@/server/auth";
 import { db } from "@/server/db";
 import {
@@ -15,6 +15,8 @@ import {
   taskLabels,
   subtasks,
   taskDependencies,
+  sprints,
+  milestones,
 } from "@/server/db/schema";
 import { canWrite } from "@/server/permissions";
 export function configured() {
@@ -186,7 +188,100 @@ export async function projectData(projectId: string, userId: string) {
     blockedBy: Object.fromEntries(
       blockers.map((b) => [b.taskId, b.open]),
     ) as Record<string, number>,
+    ...(await planningOptions(projectId)),
   };
+}
+// Lightweight lists for selects (task form, board filter).
+export async function planningOptions(projectId: string) {
+  const [sprintRows, milestoneRows] = await Promise.all([
+    db
+      .select({ id: sprints.id, name: sprints.name, status: sprints.status })
+      .from(sprints)
+      .where(eq(sprints.projectId, projectId))
+      .orderBy(desc(sprints.startDate)),
+    db
+      .select({ id: milestones.id, name: milestones.name })
+      .from(milestones)
+      .where(eq(milestones.projectId, projectId))
+      .orderBy(sql`${milestones.dueDate} asc nulls last`),
+  ]);
+  return { sprints: sprintRows, milestones: milestoneRows };
+}
+// Sprints and milestones referenced by tasks must belong to the same project;
+// a closed sprint cannot receive new work.
+export async function assertPlanningRefs(
+  projectId: string,
+  refs: { sprintId: string | null; milestoneId: string | null }[],
+  keepSprintId: string | null = null,
+) {
+  const sprintIds = [
+    ...new Set(
+      refs
+        .map((r) => r.sprintId)
+        .filter((x): x is string => x !== null && x !== keepSprintId),
+    ),
+  ];
+  const milestoneIds = [
+    ...new Set(refs.map((r) => r.milestoneId).filter((x) => x !== null)),
+  ];
+  if (sprintIds.length) {
+    const found = await db
+      .select({ id: sprints.id })
+      .from(sprints)
+      .where(
+        and(
+          eq(sprints.projectId, projectId),
+          inArray(sprints.id, sprintIds),
+          ne(sprints.status, "completed"),
+        ),
+      );
+    if (found.length !== sprintIds.length)
+      throw new Error("Seçilen sprint bu projeye ait değil veya kapanmış.");
+  }
+  if (milestoneIds.length) {
+    const found = await db
+      .select({ id: milestones.id })
+      .from(milestones)
+      .where(
+        and(
+          eq(milestones.projectId, projectId),
+          inArray(milestones.id, milestoneIds),
+        ),
+      );
+    if (found.length !== milestoneIds.length)
+      throw new Error("Seçilen milestone bu projeye ait değil.");
+  }
+}
+// Sprints with live task statistics, newest first.
+export async function sprintOverview(projectId: string) {
+  return db
+    .select({
+      sprint: sprints,
+      tasks: sql<number>`count(${tasks.id})::int`,
+      doneTasks: sql<number>`count(${tasks.id}) filter (where ${tasks.status} = 'done')::int`,
+      points: sql<number>`coalesce(sum(${tasks.estimatePoints}), 0)::int`,
+      donePoints: sql<number>`coalesce(sum(${tasks.estimatePoints}) filter (where ${tasks.status} = 'done'), 0)::int`,
+    })
+    .from(sprints)
+    .leftJoin(tasks, eq(tasks.sprintId, sprints.id))
+    .where(eq(sprints.projectId, projectId))
+    .groupBy(sprints.id)
+    .orderBy(desc(sprints.startDate), desc(sprints.createdAt));
+}
+export async function milestoneOverview(projectId: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  return db
+    .select({
+      milestone: milestones,
+      tasks: sql<number>`count(${tasks.id})::int`,
+      doneTasks: sql<number>`count(${tasks.id}) filter (where ${tasks.status} = 'done')::int`,
+      overdue: sql<boolean>`(${milestones.dueDate} < ${today} and count(${tasks.id}) filter (where ${tasks.status} <> 'done') > 0)`,
+    })
+    .from(milestones)
+    .leftJoin(tasks, eq(tasks.milestoneId, milestones.id))
+    .where(eq(milestones.projectId, projectId))
+    .groupBy(milestones.id)
+    .orderBy(sql`${milestones.dueDate} asc nulls last`, milestones.createdAt);
 }
 export async function workspaceMembers(workspaceId: string) {
   return db

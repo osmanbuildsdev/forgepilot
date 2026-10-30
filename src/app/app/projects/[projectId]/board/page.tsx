@@ -7,14 +7,17 @@ import {
   workspaceMembers,
 } from "@/server/projects/service";
 import { canWrite, canManageMembers } from "@/server/permissions";
-import { ProjectTabs } from "@/components/project-tabs";
+import { ProjectHeader } from "@/components/project-header";
 import { Board } from "@/features/tasks/board";
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ sprint?: string }>;
 }) {
   const { projectId } = await params;
+  const { sprint } = await searchParams;
   if (!z.uuid().safeParse(projectId).success) notFound();
   const user = await requireUser();
   const data = await projectData(projectId, user.id);
@@ -24,14 +27,7 @@ export default async function Page({
   ]);
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <span className="project-key">{data.project.key}</span>
-          <h1 style={{ marginTop: 8 }}>{data.project.name}</h1>
-          <p className="muted">Net öncelikler. Görünür ilerleme.</p>
-        </div>
-      </header>
-      <ProjectTabs id={projectId} active="/board" />
+      <ProjectHeader project={data.project} active="/board" />
       <Board
         projectId={projectId}
         projectKey={data.project.key}
@@ -44,6 +40,13 @@ export default async function Page({
         editable={canWrite(member.role)}
         aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
         viewer={{ id: user.id, canModerate: canManageMembers(member.role) }}
+        sprints={data.sprints}
+        milestones={data.milestones}
+        initialSprint={
+          sprint === "none" || data.sprints.some((s) => s.id === sprint)
+            ? (sprint as string)
+            : "all"
+        }
       />
     </>
   );

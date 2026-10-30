@@ -7,7 +7,7 @@ import {
   workspaceAccess,
 } from "@/server/projects/service";
 import { canManageMembers, canWrite } from "@/server/permissions";
-import { ProjectTabs } from "@/components/project-tabs";
+import { ProjectHeader } from "@/components/project-header";
 import { ProjectSettings } from "@/features/projects/project-settings";
 
 export const metadata: Metadata = { title: "Proje ayarları" };
@@ -24,13 +24,7 @@ export default async function Page({
   const me = await workspaceAccess(project.workspaceId, user.id);
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <span className="project-key">{project.key}</span>
-          <h1 style={{ marginTop: 6 }}>{project.name}</h1>
-        </div>
-      </header>
-      <ProjectTabs id={projectId} active="/settings" />
+      <ProjectHeader project={project} active="/settings" />
       <ProjectSettings
         project={{
           id: project.id,

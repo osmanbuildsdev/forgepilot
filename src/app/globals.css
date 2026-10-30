@@ -761,6 +761,94 @@ select:focus {
   color: var(--fg-subtle);
 }
 
+/* Planning */
+.sprint-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sprint-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  font-size: 13px;
+}
+.sprint-list li + li {
+  border-top: 1px solid var(--border);
+}
+.sprint-list strong {
+  font-weight: 500;
+}
+.sprint-goal {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.active-sprint {
+  display: grid;
+  gap: 14px;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.sprint-meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.sprint-meters .progress {
+  margin-top: 6px;
+}
+.progress.time span {
+  background: var(--fg-subtle);
+}
+.roadmap {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.roadmap li {
+  display: grid;
+  grid-template-columns: 96px 14px minmax(0, 1fr);
+  gap: 14px;
+  position: relative;
+  padding: 14px 0;
+}
+.roadmap li::before {
+  content: "";
+  position: absolute;
+  left: 116px;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--border);
+}
+.roadmap li:first-child::before {
+  top: 20px;
+}
+.roadmap li:last-child::before {
+  bottom: calc(100% - 20px);
+}
+.roadmap-date {
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding-top: 1px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.roadmap-marker {
+  position: relative;
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  margin: 4px 0 0 1px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+}
+.roadmap li.complete .roadmap-marker {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
 /* Kanban */
 .board {
   display: grid;
@@ -1717,8 +1805,15 @@ select:focus {
   .workflow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .dash-grid {
+  .dash-grid,
+  .sprint-meters {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .roadmap li {
+    grid-template-columns: 72px 14px minmax(0, 1fr);
+  }
+  .roadmap li::before {
+    left: 92px;
   }
   .split {
     grid-template-columns: 1fr;
