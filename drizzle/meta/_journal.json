@@ -8,6 +8,13 @@
       "when": 1793375517387,
       "tag": "0000_lyrical_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793378416827,
+      "tag": "0001_typed_activity_events",
+      "breakpoints": true
     }
   ]
 }

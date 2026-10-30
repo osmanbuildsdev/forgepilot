@@ -3,13 +3,8 @@ import { z } from "zod";
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import {
-  workspaces,
-  members,
-  projects,
-  tasks,
-  activities,
-} from "@/server/db/schema";
+import { workspaces, members, projects, tasks } from "@/server/db/schema";
+import { recordActivity } from "@/server/activity";
 import {
   requireUser,
   workspaceAccess,
@@ -58,18 +53,23 @@ export async function saveTasks(projectId: string, input: unknown) {
       })
       .where(eq(projects.id, projectId))
       .returning();
-    await tx.insert(tasks).values(
-      data.tasks.map((t, i) => ({
-        ...t,
-        projectId,
-        number: p.nextTaskNumber - data.tasks.length + i + 1,
-        createdBy: user.id,
-      })),
-    );
-    await tx.insert(activities).values({
+    const created = await tx
+      .insert(tasks)
+      .values(
+        data.tasks.map((t, i) => ({
+          ...t,
+          projectId,
+          number: p.nextTaskNumber - data.tasks.length + i + 1,
+          createdBy: user.id,
+        })),
+      )
+      .returning({ id: tasks.id, number: tasks.number });
+    await recordActivity(tx, {
       projectId,
+      type: "task.created",
       actorId: user.id,
       message: `${data.tasks.length} görev oluşturuldu.`,
+      metadata: { taskIds: created.map((t) => t.id) },
     });
   });
   revalidatePath("/app", "layout");
@@ -91,10 +91,13 @@ export async function updateTask(
       .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)))
       .returning();
     if (!t) throw new Error("Görev bulunamadı.");
-    await tx.insert(activities).values({
+    await recordActivity(tx, {
       projectId,
+      type: "task.updated",
       actorId: user.id,
+      taskId: t.id,
       message: `#${t.number} güncellendi: ${t.title} → ${t.status}`,
+      metadata: { number: t.number, status: t.status, priority: t.priority },
     });
   });
   revalidatePath("/app", "layout");
@@ -110,10 +113,12 @@ export async function deleteTask(projectId: string, taskId: string) {
       .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)))
       .returning();
     if (!t) throw new Error("Görev bulunamadı.");
-    await tx.insert(activities).values({
+    await recordActivity(tx, {
       projectId,
+      type: "task.deleted",
       actorId: user.id,
       message: `#${t.number} silindi: ${t.title}`,
+      metadata: { number: t.number, title: t.title },
     });
   });
   revalidatePath("/app", "layout");

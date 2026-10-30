@@ -84,13 +84,13 @@ async function main() {
           createdBy: owner.id,
         })),
       );
-      await tx
-        .insert(activities)
-        .values({
-          projectId: p.id,
-          actorId: owner.id,
-          message: "Geliştirme örnek verileri seed komutuyla oluşturuldu.",
-        });
+      await tx.insert(activities).values({
+        projectId: p.id,
+        actorId: null,
+        type: "project.note",
+        source: "system",
+        message: "Geliştirme örnek verileri seed komutuyla oluşturuldu.",
+      });
     });
     console.log("Seed complete.");
   } finally {

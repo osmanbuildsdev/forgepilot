@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   index,
   pgEnum,
+  jsonb,
 } from "drizzle-orm/pg-core";
 const dates = () => ({
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -145,6 +146,15 @@ export const tasks = pgTable(
     index("task_project_status").on(t.projectId, t.status),
   ],
 );
+export const ACTIVITY_TYPES = [
+  "project.note",
+  "task.created",
+  "task.updated",
+  "task.deleted",
+] as const;
+export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+export const ACTIVITY_SOURCES = ["user", "ai", "github", "system"] as const;
+export type ActivitySource = (typeof ACTIVITY_SOURCES)[number];
 export const activities = pgTable(
   "activity_events",
   {
@@ -152,13 +162,26 @@ export const activities = pgTable(
     projectId: uuid("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
-    actorId: text("actor_id")
-      .notNull()
-      .references(() => user.id),
+    // Null when the event comes from a system, AI or GitHub source.
+    actorId: text("actor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    type: text("type").$type<ActivityType>().default("project.note").notNull(),
+    source: text("source").$type<ActivitySource>().default("user").notNull(),
+    taskId: uuid("task_id").references(() => tasks.id, {
+      onDelete: "set null",
+    }),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .default({})
+      .notNull(),
     message: text("message").notNull(),
     ...dates(),
   },
-  (t) => [index("activity_project_date").on(t.projectId, t.createdAt)],
+  (t) => [
+    index("activity_project_date").on(t.projectId, t.createdAt),
+    index("activity_project_type").on(t.projectId, t.type),
+  ],
 );
 export type Task = typeof tasks.$inferSelect;
 export type Project = typeof projects.$inferSelect;

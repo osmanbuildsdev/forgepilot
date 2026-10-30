@@ -26,7 +26,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] GitHub uzak depo bağlantısı
 - [ ] Gerçek PostgreSQL ile uçtan uca doğrulama
 - [ ] Gerçek Gemini anahtarı ve OAuth ile doğrulama
-- [ ] `activity_events` tablosunu tipli olaylara çevir (`task.created` vb., aktörü opsiyonel)
+- [x] `activity_events` tablosu tipli olaylara çevrildi (`type`, `source`, opsiyonel aktör, `task_id`, `metadata`)
 - [ ] Alan modüllerine ayır (`features/*`, `server/*`)
 - [ ] Dil kararı (arayüz Türkçe mi İngilizce mi)
 
@@ -73,3 +73,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | Tarih | Görev | Not |
 |---|---|---|
 | 2026-10-30 | Git deposu kuruldu, ilerleme dosyası eklendi | İlk commit |
+| 2026-10-30 | Aktivite olayları tipli hale getirildi | Migration 0001; GitHub ve AI olayları için aktör opsiyonel |
