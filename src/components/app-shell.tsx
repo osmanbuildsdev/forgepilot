@@ -6,6 +6,7 @@ import {
   FolderKanban,
   LogOut,
   ArrowUpRight,
+  Users,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
@@ -41,6 +42,13 @@ export function AppShell({
             >
               <FolderKanban size={17} />
               Projeler
+            </Link>
+            <Link
+              href="/app/settings/members"
+              className={path.startsWith("/app/settings") ? "active" : ""}
+            >
+              <Users size={17} />
+              Üyeler
             </Link>
           </nav>
         </div>

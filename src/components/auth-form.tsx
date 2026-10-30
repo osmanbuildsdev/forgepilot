@@ -1,9 +1,16 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+// Only same-site relative paths are honoured to avoid open redirects.
+function nextPath() {
+  const n = new URLSearchParams(window.location.search).get("next");
+  return n && n.startsWith("/") && !n.startsWith("//") && !n.includes("\\")
+    ? n
+    : "/app";
+}
 export function AuthForm({
   register,
   providers,
@@ -13,6 +20,8 @@ export function AuthForm({
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  useEffect(() => setSearch(window.location.search), []);
   const router = useRouter();
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,7 +41,7 @@ export function AuthForm({
         : await authClient.signIn.email(data);
       if (result.error) setError(result.error.message ?? "Giriş yapılamadı.");
       else {
-        router.push("/app");
+        router.push(nextPath());
         router.refresh();
       }
     } catch {
@@ -87,7 +96,7 @@ export function AuthForm({
                 try {
                   const r = await authClient.signIn.social({
                     provider,
-                    callbackURL: "/app",
+                    callbackURL: nextPath(),
                   });
                   if (r.error) setError(r.error.message ?? "Giriş başarısız.");
                 } catch {
@@ -105,7 +114,7 @@ export function AuthForm({
       <p className="muted" style={{ marginTop: 24, fontSize: 13 }}>
         {register ? "Zaten hesabın var mı?" : "Yeni bir başlangıç mı?"}{" "}
         <Link
-          href={register ? "/login" : "/register"}
+          href={`${register ? "/login" : "/register"}${search}`}
           style={{ color: "var(--accent)" }}
         >
           {register ? "Giriş yap" : "Hesap oluştur"}

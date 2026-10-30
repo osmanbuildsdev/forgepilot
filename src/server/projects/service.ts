@@ -21,11 +21,15 @@ export function configured() {
     (process.env.BETTER_AUTH_SECRET?.length ?? 0) >= 32,
   );
 }
-export async function requireUser() {
+export async function currentUser() {
   if (!configured()) redirect("/setup");
   const s = await getAuth().api.getSession({ headers: await headers() });
-  if (!s) redirect("/login");
-  return s.user;
+  return s?.user ?? null;
+}
+export async function requireUser() {
+  const u = await currentUser();
+  if (!u) redirect("/login");
+  return u;
 }
 export async function workspaceAccess(
   workspaceId: string,

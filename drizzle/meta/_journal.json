@@ -29,6 +29,13 @@
       "when": 1793379071489,
       "tag": "0003_task_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793379344357,
+      "tag": "0004_workspace_invitations",
+      "breakpoints": true
     }
   ]
 }

@@ -36,7 +36,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Yorumlar, alt görevler, bağımlılıklar, eklentiler
 - [ ] Özel Kanban kolonları
 - [ ] Proje düzenleme / silme
-- [ ] Workspace üyeleri, davet, roller
+- [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
 - [ ] Milestone, sprint, roadmap
 
 ### AI
@@ -77,3 +77,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Aktivite olayları tipli hale getirildi | Migration 0001; GitHub ve AI olayları için aktör opsiyonel |
 | 2026-10-30 | Görevlere atama, son tarih ve tahmin puanı eklendi | Migration 0002; atanan kişi çalışma alanı üyesi olmak zorunda |
 | 2026-10-30 | Etiket sistemi eklendi | Migration 0003; labels ve task_labels tabloları |
+| 2026-10-30 | Üye daveti ve rol yönetimi eklendi | Migration 0004; /app/settings/members ve /invite/[token]; davet bağlantısı elle iletilir |

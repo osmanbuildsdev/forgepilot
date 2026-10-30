@@ -13,6 +13,7 @@ import {
   date,
   primaryKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 const dates = () => ({
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -218,6 +219,32 @@ export const activities = pgTable(
   (t) => [
     index("activity_project_date").on(t.projectId, t.createdAt),
     index("activity_project_type").on(t.projectId, t.type),
+  ],
+);
+export const workspaceInvitations = pgTable(
+  "workspace_invitations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: roleEnum("role").default("member").notNull(),
+    // Only the SHA-256 of the invite token is stored; the raw token is shown once.
+    tokenHash: text("token_hash").notNull().unique(),
+    invitedBy: text("invited_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    ...dates(),
+  },
+  (t) => [
+    index("invitation_workspace").on(t.workspaceId),
+    uniqueIndex("invitation_pending_email")
+      .on(t.workspaceId, t.email)
+      .where(sql`${t.acceptedAt} is null and ${t.revokedAt} is null`),
   ],
 );
 export type Task = typeof tasks.$inferSelect;
