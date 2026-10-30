@@ -15,6 +15,13 @@
       "when": 1793378416827,
       "tag": "0001_typed_activity_events",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793378892895,
+      "tag": "0002_task_assignee_due_estimate",
+      "breakpoints": true
     }
   ]
 }

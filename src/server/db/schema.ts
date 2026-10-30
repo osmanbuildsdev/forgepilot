@@ -10,6 +10,7 @@ import {
   index,
   pgEnum,
   jsonb,
+  date,
 } from "drizzle-orm/pg-core";
 const dates = () => ({
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -136,6 +137,11 @@ export const tasks = pgTable(
     description: text("description").default("").notNull(),
     status: statusEnum("status").default("backlog").notNull(),
     priority: priorityEnum("priority").default("medium").notNull(),
+    assigneeId: text("assignee_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    dueDate: date("due_date", { mode: "string" }),
+    estimatePoints: integer("estimate_points"),
     createdBy: text("created_by")
       .notNull()
       .references(() => user.id),
@@ -144,6 +150,7 @@ export const tasks = pgTable(
   (t) => [
     uniqueIndex("task_project_number").on(t.projectId, t.number),
     index("task_project_status").on(t.projectId, t.status),
+    index("task_assignee").on(t.assigneeId),
   ],
 );
 export const ACTIVITY_TYPES = [

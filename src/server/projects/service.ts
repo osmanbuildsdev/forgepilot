@@ -10,6 +10,7 @@ import {
   workspaces,
   tasks,
   activities,
+  user,
 } from "@/server/db/schema";
 import { canWrite } from "@/server/permissions";
 export function configured() {
@@ -84,4 +85,25 @@ export async function projectData(projectId: string, userId: string) {
       .limit(15),
   ]);
   return { project, tasks: items, events };
+}
+export async function workspaceMembers(workspaceId: string) {
+  return db
+    .select({ id: user.id, name: user.name })
+    .from(members)
+    .innerJoin(user, eq(user.id, members.userId))
+    .where(eq(members.workspaceId, workspaceId))
+    .orderBy(user.name);
+}
+export async function assertAssignable(
+  workspaceId: string,
+  assigneeId: string | null,
+) {
+  if (!assigneeId) return;
+  const [m] = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(
+      and(eq(members.workspaceId, workspaceId), eq(members.userId, assigneeId)),
+    );
+  if (!m) throw new Error("Atanan kişi bu çalışma alanının üyesi değil.");
 }

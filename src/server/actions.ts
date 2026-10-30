@@ -9,12 +9,9 @@ import {
   requireUser,
   workspaceAccess,
   projectAccess,
+  assertAssignable,
 } from "@/server/projects/service";
-import {
-  projectInput,
-  taskInput,
-  generatedTasks,
-} from "@/features/tasks/schemas";
+import { projectInput, taskInput, taskBatch } from "@/features/tasks/schemas";
 export async function createWorkspace(input: unknown) {
   const user = await requireUser();
   const name = z.string().trim().min(2).max(100).parse(input);
@@ -41,9 +38,11 @@ export async function createProject(input: unknown) {
 }
 export async function saveTasks(projectId: string, input: unknown) {
   z.uuid().parse(projectId);
-  const data = generatedTasks.parse(input);
+  const data = taskBatch.parse(input);
   const user = await requireUser();
-  await projectAccess(projectId, user.id, true);
+  const project = await projectAccess(projectId, user.id, true);
+  for (const id of new Set(data.tasks.map((t) => t.assigneeId)))
+    await assertAssignable(project.workspaceId, id);
   await db.transaction(async (tx) => {
     const [p] = await tx
       .update(projects)
@@ -83,7 +82,8 @@ export async function updateTask(
   z.uuid().parse(taskId);
   const data = taskInput.parse(input);
   const user = await requireUser();
-  await projectAccess(projectId, user.id, true);
+  const project = await projectAccess(projectId, user.id, true);
+  await assertAssignable(project.workspaceId, data.assigneeId);
   await db.transaction(async (tx) => {
     const [t] = await tx
       .update(tasks)
@@ -97,7 +97,12 @@ export async function updateTask(
       actorId: user.id,
       taskId: t.id,
       message: `#${t.number} güncellendi: ${t.title} → ${t.status}`,
-      metadata: { number: t.number, status: t.status, priority: t.priority },
+      metadata: {
+        number: t.number,
+        status: t.status,
+        priority: t.priority,
+        assigneeId: t.assigneeId,
+      },
     });
   });
   revalidatePath("/app", "layout");

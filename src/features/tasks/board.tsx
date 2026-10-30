@@ -32,11 +32,13 @@ type Draft = z.infer<typeof generatedTasks>;
 function Card({
   task,
   projectKey,
+  assignee,
   onEdit,
   disabled,
 }: {
   task: Task;
   projectKey: string;
+  assignee?: string;
   onEdit: () => void;
   disabled: boolean;
 }) {
@@ -67,7 +69,11 @@ function Card({
         </button>
       </div>
       <button className="task-open" onClick={onEdit}>
-        <TaskCardContent task={task} projectKey={projectKey} />
+        <TaskCardContent
+          task={task}
+          projectKey={projectKey}
+          assignee={assignee}
+        />
       </button>
     </article>
   );
@@ -98,12 +104,14 @@ export function Board({
   projectId,
   projectKey,
   tasks,
+  members,
   editable,
   aiEnabled,
 }: {
   projectId: string;
   projectKey: string;
   tasks: Task[];
+  members: { id: string; name: string }[];
   editable: boolean;
   aiEnabled: boolean;
 }) {
@@ -209,6 +217,7 @@ export function Board({
                     key={t.id}
                     task={t}
                     projectKey={projectKey}
+                    assignee={members.find((m) => m.id === t.assigneeId)?.name}
                     onEdit={() => {
                       setError("");
                       setEditing(t);
@@ -294,6 +303,49 @@ export function Board({
                   <option value="high">Yüksek</option>
                   <option value="urgent">Acil</option>
                 </select>
+              </label>
+            </div>
+            <div className="row">
+              <label className="field" style={{ flex: 1 }}>
+                Atanan kişi
+                <select
+                  name="assigneeId"
+                  defaultValue={
+                    editing === "new" ? "" : (editing.assigneeId ?? "")
+                  }
+                  disabled={!editable}
+                >
+                  <option value="">Atanmamış</option>
+                  {members.map((m) => (
+                    <option value={m.id} key={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field" style={{ flex: 1 }}>
+                Son tarih
+                <input
+                  type="date"
+                  name="dueDate"
+                  defaultValue={
+                    editing === "new" ? "" : (editing.dueDate ?? "")
+                  }
+                  readOnly={!editable}
+                />
+              </label>
+              <label className="field" style={{ width: 90 }}>
+                Puan
+                <input
+                  type="number"
+                  name="estimatePoints"
+                  min={0}
+                  max={100}
+                  defaultValue={
+                    editing === "new" ? "" : (editing.estimatePoints ?? "")
+                  }
+                  readOnly={!editable}
+                />
               </label>
             </div>
             {error && (

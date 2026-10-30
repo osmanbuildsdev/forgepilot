@@ -31,7 +31,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [ ] Dil kararı (arayüz Türkçe mi İngilizce mi)
 
 ### Çekirdek proje yönetimi
-- [ ] Görev alanları: atama, etiket, öncelik, due date, tahmin puanı
+- [x] Görev alanları: atama, son tarih, tahmin puanı (öncelik zaten vardı)
+- [ ] Etiketler
 - [ ] Yorumlar, alt görevler, bağımlılıklar, eklentiler
 - [ ] Özel Kanban kolonları
 - [ ] Proje düzenleme / silme
@@ -74,3 +75,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 |---|---|---|
 | 2026-10-30 | Git deposu kuruldu, ilerleme dosyası eklendi | İlk commit |
 | 2026-10-30 | Aktivite olayları tipli hale getirildi | Migration 0001; GitHub ve AI olayları için aktör opsiyonel |
+| 2026-10-30 | Görevlere atama, son tarih ve tahmin puanı eklendi | Migration 0002; atanan kişi çalışma alanı üyesi olmak zorunda |

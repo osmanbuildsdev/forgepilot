@@ -4,6 +4,7 @@ import {
   requireUser,
   projectData,
   workspaceAccess,
+  workspaceMembers,
 } from "@/server/projects/service";
 import { canWrite } from "@/server/permissions";
 import { ProjectTabs } from "@/components/project-tabs";
@@ -17,7 +18,10 @@ export default async function Page({
   if (!z.uuid().safeParse(projectId).success) notFound();
   const user = await requireUser();
   const data = await projectData(projectId, user.id);
-  const member = await workspaceAccess(data.project.workspaceId, user.id);
+  const [member, people] = await Promise.all([
+    workspaceAccess(data.project.workspaceId, user.id),
+    workspaceMembers(data.project.workspaceId),
+  ]);
   return (
     <>
       <header className="page-heading">
@@ -32,6 +36,7 @@ export default async function Page({
         projectId={projectId}
         projectKey={data.project.key}
         tasks={data.tasks}
+        members={people}
         editable={canWrite(member.role)}
         aiEnabled={Boolean(process.env.GEMINI_API_KEY)}
       />
