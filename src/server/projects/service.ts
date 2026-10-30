@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, ne, sql } from "drizzle-orm";
 import { getAuth } from "@/server/auth";
 import { db } from "@/server/db";
 import {
@@ -74,6 +74,55 @@ export async function userProjects(userId: string) {
     .innerJoin(workspaces, eq(workspaces.id, projects.workspaceId))
     .where(eq(members.userId, userId))
     .orderBy(desc(projects.createdAt));
+}
+// Per-project task counts for every project the user can see.
+export async function projectSummaries(userId: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  return db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      key: projects.key,
+      description: projects.description,
+      workspace: workspaces.name,
+      total: sql<number>`count(${tasks.id})::int`,
+      done: sql<number>`count(${tasks.id}) filter (where ${tasks.status} = 'done')::int`,
+      active: sql<number>`count(${tasks.id}) filter (where ${tasks.status} = 'in_progress')::int`,
+      overdue: sql<number>`count(${tasks.id}) filter (where ${tasks.status} <> 'done' and ${tasks.dueDate} < ${today})::int`,
+    })
+    .from(projects)
+    .innerJoin(members, eq(members.workspaceId, projects.workspaceId))
+    .innerJoin(workspaces, eq(workspaces.id, projects.workspaceId))
+    .leftJoin(tasks, eq(tasks.projectId, projects.id))
+    .where(eq(members.userId, userId))
+    .groupBy(projects.id, workspaces.name)
+    .orderBy(desc(projects.createdAt));
+}
+// Open tasks assigned to the user, most urgent first.
+export async function myOpenTasks(userId: string, limit = 50) {
+  return db
+    .select({
+      task: tasks,
+      projectId: projects.id,
+      projectKey: projects.key,
+      projectName: projects.name,
+    })
+    .from(tasks)
+    .innerJoin(projects, eq(projects.id, tasks.projectId))
+    .innerJoin(
+      members,
+      and(
+        eq(members.workspaceId, projects.workspaceId),
+        eq(members.userId, userId),
+      ),
+    )
+    .where(and(eq(tasks.assigneeId, userId), ne(tasks.status, "done")))
+    .orderBy(
+      sql`case ${tasks.priority} when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 else 3 end`,
+      sql`${tasks.dueDate} asc nulls last`,
+      tasks.number,
+    )
+    .limit(limit);
 }
 export async function projectData(projectId: string, userId: string) {
   const project = await projectAccess(projectId, userId);

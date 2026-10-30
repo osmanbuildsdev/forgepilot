@@ -1,104 +1,145 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, ArrowUpRight, FolderKanban } from "lucide-react";
+import { Plus, FolderKanban, CircleCheck } from "lucide-react";
 import {
   requireUser,
-  userProjects,
+  projectSummaries,
+  myOpenTasks,
   userWorkspaces,
 } from "@/server/projects/service";
 import { Button } from "@/components/ui/button";
+import { TaskRow } from "@/components/task-row";
+
 export default async function Page() {
   const user = await requireUser();
-  const [spaces, items] = await Promise.all([
+  const [spaces, projects, mine] = await Promise.all([
     userWorkspaces(user.id),
-    userProjects(user.id),
+    projectSummaries(user.id),
+    myOpenTasks(user.id, 8),
   ]);
   if (!spaces.length) redirect("/onboarding");
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const overdue = projects.reduce((n, p) => n + p.overdue, 0);
+  const open = projects.reduce((n, p) => n + p.total - p.done, 0);
   return (
     <div className="stack">
       <header className="page-heading">
         <div>
-          <div className="eyebrow" style={{ marginBottom: 10 }}>
-            Üretmek için güzel bir gün
-          </div>
-          <h1>Merhaba, {user.name.split(" ")[0]}.</h1>
-          <p className="muted">Büyük resmi gör. Bir sonraki adımını belirle.</p>
+          <span className="eyebrow">
+            {now.toLocaleDateString("tr-TR", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              timeZone: "Europe/Istanbul",
+            })}
+          </span>
+          <h1 style={{ marginTop: 4 }}>Merhaba, {user.name.split(" ")[0]}</h1>
+          <p className="muted">
+            {mine.length
+              ? `Sana atanmış ${mine.length} açık görev var.`
+              : "Sana atanmış açık görev yok."}
+          </p>
         </div>
         <Button asChild>
           <Link href="/app/projects/new">
-            <Plus size={16} />
+            <Plus size={15} />
             Yeni proje
           </Link>
         </Button>
       </header>
+
       <div className="stats">
         <div className="panel stat">
-          <span className="muted">Projeler</span>
-          <strong>{items.length}</strong>
+          <span className="stat-label">Aktif projeler</span>
+          <strong>{projects.length}</strong>
+          <small>{spaces.length} çalışma alanında</small>
         </div>
         <div className="panel stat">
-          <span className="muted">Çalışma alanları</span>
-          <strong>{spaces.length}</strong>
+          <span className="stat-label">Açık görevler</span>
+          <strong>{open}</strong>
+          <small>tüm projelerde</small>
         </div>
         <div className="panel stat">
-          <span className="muted">Gemini</span>
-          <strong style={{ fontSize: 20, marginTop: 18 }}>
-            {process.env.GEMINI_API_KEY ? "Yapılandırıldı" : "Bağlı değil"}
-          </strong>
+          <span className="stat-label">Geciken</span>
+          <strong className={overdue ? "overdue" : ""}>{overdue}</strong>
+          <small>son tarihi geçmiş ve bitmemiş</small>
         </div>
       </div>
-      <div className="row between" style={{ marginTop: 15 }}>
-        <h2>Projelerin</h2>
-        <Link href="/app/projects" className="row muted">
-          Tümünü gör <ArrowUpRight size={15} />
-        </Link>
-      </div>
-      {items.length ? (
-        <div className="project-grid">
-          {items.map(({ project: p, workspace }) => (
-            <Link
-              className="panel project-card"
-              key={p.id}
-              href={`/app/projects/${p.id}`}
-            >
-              <div className="row between">
-                <span className="project-key">{p.key}</span>
-                <ArrowUpRight size={17} />
-              </div>
-              <h2 style={{ marginTop: 15 }}>{p.name}</h2>
+
+      <div className="dash-grid">
+        <section className="panel">
+          <div className="panel-head">
+            <h2>Görevlerim</h2>
+            <Link href="/app/tasks">Tümü</Link>
+          </div>
+          {mine.length ? (
+            <ul className="task-list">
+              {mine.map((m) => (
+                <TaskRow
+                  key={m.task.id}
+                  task={m.task}
+                  projectId={m.projectId}
+                  projectKey={m.projectKey}
+                  today={today}
+                />
+              ))}
+            </ul>
+          ) : (
+            <div className="empty" style={{ padding: "36px 16px" }}>
+              <CircleCheck size={22} />
               <p className="muted">
-                {p.description ||
-                  "İlk görevini ekleyerek projenin yönünü belirle."}
+                Sana atanmış açık görev yok. Bir görevi üstlenmek için görev
+                formundan kendini ata.
               </p>
-              <span className="badge">{workspace}</span>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="empty">
-          <FolderKanban size={30} />
-          <h2>İlk projen için yer hazır.</h2>
-          <p className="muted">
-            Bir hedef belirle, görevlerine ayır ve geliştirmeye başla.
-          </p>
-          <Button asChild>
-            <Link href="/app/projects/new">Proje oluştur</Link>
-          </Button>
-        </div>
-      )}
-      <div className="panel row between">
-        <div>
-          <h3>Her ekibe kendi alanı.</h3>
-          <p className="muted">
-            Başka bir proje grubu için yeni çalışma alanı oluşturabilirsin.
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/onboarding">
-            <Plus size={15} />
-            Çalışma alanı
-          </Link>
-        </Button>
+            </div>
+          )}
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <h2>Projeler</h2>
+            <Link href="/app/projects">Tümü</Link>
+          </div>
+          {projects.length ? (
+            projects.slice(0, 6).map((p) => {
+              const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/app/projects/${p.id}`}
+                  className="project-line"
+                >
+                  <div className="row between">
+                    <span className="row" style={{ gap: 8, minWidth: 0 }}>
+                      <span className="project-chip">{p.key.slice(0, 2)}</span>
+                      <strong className="truncate" style={{ fontWeight: 500 }}>
+                        {p.name}
+                      </strong>
+                    </span>
+                    <span className="subtle" style={{ fontSize: 12 }}>
+                      {p.done}/{p.total}
+                      {p.overdue > 0 && (
+                        <span className="overdue"> · {p.overdue} geciken</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="progress">
+                    <span style={{ width: `${pct}%` }} />
+                  </div>
+                </Link>
+              );
+            })
+          ) : (
+            <div className="empty" style={{ padding: "36px 16px" }}>
+              <FolderKanban size={22} />
+              <p className="muted">İlk projeni oluşturarak başla.</p>
+              <Button size="sm" asChild>
+                <Link href="/app/projects/new">Proje oluştur</Link>
+              </Button>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

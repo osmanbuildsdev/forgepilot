@@ -71,6 +71,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Giriş ve kayıt sayfaları yeniden tasarlandı
 - [ ] Erişilebilirlik, mobil, reduced-motion
 
+- [x] Uygulama kabuğu (kenar çubuğu, proje listesi, breadcrumb), dashboard ve Görevlerim sayfası
+
 ## Görev günlüğü
 
 | Tarih | Görev | Not |
@@ -81,3 +83,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Etiket sistemi eklendi | Migration 0003; labels ve task_labels tabloları |
 | 2026-10-30 | Üye daveti ve rol yönetimi eklendi | Migration 0004; /app/settings/members ve /invite/[token]; davet bağlantısı elle iletilir |
 | 2026-10-30 | Tasarım sistemi, landing, giriş ve kayıt sayfaları yenilendi | Gradyan yok, tek vurgu rengi; henüz olmayan özellikler "Yakında" olarak işaretli |
+| 2026-10-30 | Uygulama içi arayüz yeni tasarıma geçirildi | Dashboard gerçek sayımlar gösteriyor; /app/tasks eklendi |

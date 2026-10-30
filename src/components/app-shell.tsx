@@ -5,89 +5,153 @@ import {
   LayoutDashboard,
   FolderKanban,
   LogOut,
-  ArrowUpRight,
   Users,
+  CircleCheck,
+  Plus,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-provider";
+import { Button } from "./ui/button";
 import { authClient } from "@/lib/auth-client";
+
+type ShellProject = { id: string; name: string; key: string };
+
+const nav = [
+  { href: "/app", label: "Genel bakış", icon: LayoutDashboard, exact: true },
+  { href: "/app/tasks", label: "Görevlerim", icon: CircleCheck },
+  { href: "/app/projects", label: "Projeler", icon: FolderKanban, exact: true },
+  { href: "/app/settings/members", label: "Üyeler", icon: Users },
+];
+
+function crumbs(path: string, projects: ShellProject[]) {
+  if (path === "/app") return ["Genel bakış"];
+  if (path.startsWith("/app/tasks")) return ["Görevlerim"];
+  if (path.startsWith("/app/settings/members")) return ["Ayarlar", "Üyeler"];
+  if (path === "/app/projects/new") return ["Projeler", "Yeni proje"];
+  const match = path.match(/^\/app\/projects\/([^/]+)(\/board)?/);
+  if (match) {
+    const p = projects.find((x) => x.id === match[1]);
+    return ["Projeler", p?.name ?? "Proje", ...(match[2] ? ["Kanban"] : [])];
+  }
+  return ["Projeler"];
+}
+
 export function AppShell({
   children,
-  name,
+  user,
   workspace,
+  projects,
 }: {
   children: React.ReactNode;
-  name: string;
+  user: { name: string; email: string };
   workspace: string;
+  projects: ShellProject[];
 }) {
   const path = usePathname();
   const router = useRouter();
+  const trail = crumbs(path, projects);
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Link href="/app">
+        <Link href="/app" aria-label="Genel bakış">
           <Logo />
         </Link>
-        <div className="workspace-name">{workspace}</div>
+        <div className="workspace-name" title={workspace}>
+          <span className="project-chip">
+            {workspace.charAt(0).toUpperCase()}
+          </span>
+          <span className="truncate">{workspace}</span>
+        </div>
+        <nav aria-label="Uygulama menüsü">
+          {nav.map(({ href, label, icon: Icon, exact }) => {
+            const active = exact ? path === href : path.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
         <div>
-          <p className="sidebar-label">Çalışma alanı</p>
-          <nav style={{ marginTop: 10 }}>
-            <Link href="/app" className={path === "/app" ? "active" : ""}>
-              <LayoutDashboard size={17} />
-              Genel bakış
-            </Link>
+          <div className="row between sidebar-label">
+            <span>Projeler</span>
             <Link
-              href="/app/projects"
-              className={path.startsWith("/app/projects") ? "active" : ""}
+              href="/app/projects/new"
+              aria-label="Yeni proje"
+              className="subtle"
             >
-              <FolderKanban size={17} />
-              Projeler
+              <Plus size={14} />
             </Link>
-            <Link
-              href="/app/settings/members"
-              className={path.startsWith("/app/settings") ? "active" : ""}
-            >
-              <Users size={17} />
-              Üyeler
-            </Link>
+          </div>
+          <nav aria-label="Projeler" style={{ marginTop: 6 }}>
+            {projects.slice(0, 8).map((p) => {
+              const active = path.startsWith(`/app/projects/${p.id}`);
+              return (
+                <Link
+                  key={p.id}
+                  href={`/app/projects/${p.id}/board`}
+                  className={active ? "active" : ""}
+                >
+                  <span className="project-chip">{p.key.slice(0, 2)}</span>
+                  <span className="truncate">{p.name}</span>
+                </Link>
+              );
+            })}
+            {!projects.length && (
+              <span
+                className="subtle"
+                style={{ padding: "4px 10px", fontSize: 12 }}
+              >
+                Henüz proje yok
+              </span>
+            )}
           </nav>
         </div>
-        <div className="sidebar-bottom stack">
-          <div className="panel" style={{ padding: 14 }}>
-            <span className="eyebrow" style={{ fontSize: 9 }}>
-              İlk adım, net bir plan
-            </span>
-            <p className="muted" style={{ marginTop: 7 }}>
-              Bir proje aç ve ilk görevini oluştur.
-            </p>
-          </div>
-          <Link href="/" className="row muted">
-            ForgePilot hakkında <ArrowUpRight size={14} />
-          </Link>
-        </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <span className="muted" style={{ fontSize: 12 }}>
-            Çalışma alanı <span style={{ margin: "0 10px" }}> / </span>{" "}
-            {path.includes("/projects") ? "Projeler" : "Genel bakış"}
-          </span>
-          <div className="row">
-            <ThemeToggle />
-            <span className="avatar" title={name}>
-              {name.charAt(0).toUpperCase()}
+        <div className="sidebar-bottom">
+          <div className="user-card">
+            <span className="avatar">{user.name.charAt(0).toUpperCase()}</span>
+            <span className="user-meta">
+              <strong className="truncate">{user.name}</strong>
+              <span className="subtle truncate">{user.email}</span>
             </span>
             <button
-              className="button ghost"
+              className="icon-button"
               aria-label="Çıkış yap"
+              title="Çıkış yap"
               onClick={async () => {
                 await authClient.signOut();
                 router.push("/login");
                 router.refresh();
               }}
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
             </button>
+          </div>
+        </div>
+      </aside>
+      <div className="main-shell">
+        <header className="topbar">
+          <nav aria-label="Konum" className="breadcrumbs">
+            {trail.map((c, i) => (
+              <span key={i} className={i === trail.length - 1 ? "current" : ""}>
+                {c}
+              </span>
+            ))}
+          </nav>
+          <div className="row" style={{ gap: 6 }}>
+            <ThemeToggle />
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/app/projects/new">
+                <Plus size={14} />
+                Yeni proje
+              </Link>
+            </Button>
           </div>
         </header>
         <div className="app-content">{children}</div>
