@@ -13,5 +13,12 @@ services:
       test: ["CMD-SHELL", "pg_isready -U forgepilot"]
       interval: 5s
       retries: 10
+  # Optional: `docker compose --profile queue up -d` and set
+  # REDIS_URL=redis://localhost:6379, then run `npm run worker`.
+  redis:
+    image: redis:7-alpine
+    profiles: ["queue"]
+    ports:
+      - "127.0.0.1:6379:6379"
 volumes:
   postgres_data:

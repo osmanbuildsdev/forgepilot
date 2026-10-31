@@ -2,8 +2,8 @@
 
 Ürün kapsamı ve plan: `BUILD_PLAN.md`. Her görev bittiğinde bu dosya güncellenir ve ayrı bir commit atılır.
 
-Son güncelleme: 2026-10-30
-Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
+Son güncelleme: 2026-10-31
+Tahmini genel ilerleme: kapsamın kodu tamamlandı (~%90). Kalan iş gerçek servislerle (PostgreSQL, Gemini, GitHub App, Redis) uçtan uca doğrulama ve aşağıdaki açık maddeler.
 
 ## Yapılanlar
 
@@ -24,13 +24,15 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 
 ### Altyapı / borç
 - [x] Git deposu
-- [ ] GitHub uzak depo bağlantısı
+- [x] GitHub uzak depo bağlantısı
 - [ ] Gerçek PostgreSQL ile uçtan uca doğrulama
 - [ ] Gerçek Gemini anahtarı ve OAuth ile doğrulama
 - [x] `activity_events` tablosu tipli olaylara çevrildi (`type`, `source`, opsiyonel aktör, `task_id`, `metadata`)
 - [x] Sunucu işlemleri sonuç nesnesi döndürüyor; kullanıcıya gösterilecek hatalar üretimde de görünür, beklenmeyen hatalar sızmaz
-- [ ] Alan modüllerine ayır (`features/*`, `server/*`) — büyük ölçüde yapıldı
-- [ ] Dil kararı (arayüz Türkçe mi İngilizce mi)
+- [x] Alan modüllerine ayırma (`features/*`, `server/*`)
+- [x] Dil kararı: arayüz Türkçe
+- [x] README: kurulum, PostgreSQL, migration, seed, Gemini, GitHub App, Redis/worker, cron ve ortam değişkenleri
+- [x] Gerçekçi örnek veri: "Acme Labs · Örnek" çalışma alanı (2 proje, sprintler, milestone'lar, bağımlılıklar, yorumlar, doküman); tekrar çalıştırmada kopya oluşturmaz
 
 ### Çekirdek proje yönetimi
 - [x] Görev alanları: atama, son tarih, tahmin puanı (öncelik zaten vardı)
@@ -46,7 +48,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Kanban'da sprint filtresi, görev formunda sprint ve milestone seçimi
 
 ### AI
-- [ ] AIProvider genişletme (proje planı eklendi; özet, sağlık, sonraki adım kaldı)
+- [x] AIProvider: görev önerisi, proje planı, özet, doküman, Copilot, sprint ve GitHub özeti için yapılandırılmış çıktı
 - [x] AI proje üretici (`/app/projects/new/ai`): plan önizleme ve düzenleme, onayla proje + milestone + sprint + görev oluşturma
 - [x] Günlük özet: veriden belirlenimci bölümler + günde bir kez önbelleğe alınan isteğe bağlı AI anlatımı
 - [x] Copilot: proje bağlamıyla soru-cevap, gerçek nesnelere doğrulanmış referanslar, onay isteyen aksiyonlar (görev oluştur, öncelik değiştir, sprinte ekle, görevi aç)
@@ -119,3 +121,5 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-31 | 5 adımlı onboarding | GitHub kurulum dönüşü yalnızca uygulama içi adreslere izin verir |
 | 2026-10-31 | Özel Kanban kolonları | Migration 0014; her durumun en az bir kolonu olması zorunlu |
 | 2026-10-31 | Dosya ekleri | Migration 0015; SVG\/HTML gibi çalıştırılabilir türler reddedilir |
+| 2026-10-31 | Örnek veri yenilendi | Tarihler bugüne göre hesaplanır; örnek ekip arkadaşları giriş yapamaz; GitHub verisi uydurulmaz |
+| 2026-10-31 | README yeniden yazıldı | Redis compose'a isteğe bağlı profil olarak eklendi |
