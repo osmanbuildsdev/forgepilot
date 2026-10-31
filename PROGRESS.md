@@ -37,7 +37,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Etiketler (proje bazlı, görev başına çoklu seçim)
 - [x] Yorumlar (ekle, düzenle, sil; yöneticiler moderasyon yapabilir) ve sağdan açılan görev paneli
 - [x] Alt görevler (kontrol listesi) ve görev bağımlılıkları (döngü kontrolü, kartta "Engelli" rozeti)
-- [ ] Dosya ekleri
+- [x] Dosya ekleri: PostgreSQL'de saklanır (10 MB, görev başına 20 dosya), tür uzantıdan belirlenir, yalnızca güvenli görseller tarayıcıda açılır, indirme yanıtı sandbox'lı
 - [x] Özel Kanban kolonları: her kolon bir duruma bağlı (raporlar ve sağlık skoru bozulmaz), ekle/yeniden adlandır/sırala/sil, varsayılana dön; silinen kolondaki görevler aynı durumun ilk kolonuna düşer
 - [x] Proje ayarları: ad ve açıklama düzenleme, anahtarı yazarak onaylı silme (yalnızca sahip/yönetici)
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
@@ -118,3 +118,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Ayarlar sayfaları | Ücretli plan veya ödeme taklidi yok |
 | 2026-10-31 | 5 adımlı onboarding | GitHub kurulum dönüşü yalnızca uygulama içi adreslere izin verir |
 | 2026-10-31 | Özel Kanban kolonları | Migration 0014; her durumun en az bir kolonu olması zorunlu |
+| 2026-10-31 | Dosya ekleri | Migration 0015; SVG\/HTML gibi çalıştırılabilir türler reddedilir |

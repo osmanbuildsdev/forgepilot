@@ -13,6 +13,7 @@ import {
   date,
   primaryKey,
   type AnyPgColumn,
+  customType,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 const dates = () => ({
@@ -350,6 +351,31 @@ export const taskDependencies = pgTable(
     primaryKey({ columns: [t.taskId, t.dependsOnId] }),
     index("dependency_depends_on").on(t.dependsOnId),
   ],
+);
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => "bytea",
+});
+// File contents live in PostgreSQL so no extra storage service is needed;
+// the upload limit keeps rows small.
+export const taskAttachments = pgTable(
+  "task_attachments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    uploadedBy: text("uploaded_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    data: bytea("data").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("attachment_task").on(t.taskId, t.createdAt)],
 );
 export const taskComments = pgTable(
   "task_comments",

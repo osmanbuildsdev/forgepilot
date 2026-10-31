@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GitCommitHorizontal, GitPullRequest, Lock, X } from "lucide-react";
 import { SuggestionButtons } from "@/features/github/suggestion-buttons";
+import { TaskAttachments } from "./task-attachments";
 
 const prStateLabels: Record<string, string> = {
   open: "Açık",
@@ -28,12 +29,16 @@ export function TaskChecklist({
   taskId,
   candidates,
   canWrite,
+  viewerId,
+  canModerate,
 }: {
   projectId: string;
   projectKey: string;
   taskId: string;
   candidates: { id: string; number: number; title: string }[];
   canWrite: boolean;
+  viewerId: string;
+  canModerate: boolean;
 }) {
   const router = useRouter();
   const [data, setData] = useState<Details | null>(null);
@@ -230,6 +235,15 @@ export function TaskChecklist({
           </select>
         )}
       </section>
+      <TaskAttachments
+        projectId={projectId}
+        taskId={taskId}
+        items={data.attachments}
+        viewerId={viewerId}
+        canWrite={canWrite}
+        canModerate={canModerate}
+        onChange={load}
+      />
       {data.github.length > 0 && (
         <section aria-labelledby="github-title">
           <h3 id="github-title">GitHub</h3>

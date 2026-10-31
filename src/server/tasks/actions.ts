@@ -4,9 +4,21 @@ import { z } from "zod";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { sprints, subtasks, taskDependencies, tasks } from "@/server/db/schema";
+import {
+  sprints,
+  subtasks,
+  taskAttachments,
+  taskDependencies,
+  tasks,
+  user as users,
+} from "@/server/db/schema";
+import { canManageMembers } from "@/server/permissions";
 import { recordActivity } from "@/server/activity";
-import { requireUser, projectAccess } from "@/server/projects/service";
+import {
+  requireUser,
+  projectAccess,
+  workspaceAccess,
+} from "@/server/projects/service";
 import { taskLinks } from "@/server/github/queries";
 
 const subtaskTitle = z.string().trim().min(1).max(200);
@@ -41,7 +53,7 @@ export async function taskDetails(projectId: string, taskId: string) {
     z.uuid().parse(taskId);
     await access(projectId);
     await taskInProject(projectId, taskId);
-    const [items, blockers, github] = await Promise.all([
+    const [items, blockers, github, attachments] = await Promise.all([
       db
         .select({ id: subtasks.id, title: subtasks.title, done: subtasks.done })
         .from(subtasks)
@@ -59,8 +71,22 @@ export async function taskDetails(projectId: string, taskId: string) {
         .where(eq(taskDependencies.taskId, taskId))
         .orderBy(asc(tasks.number)),
       taskLinks(taskId),
+      // Metadata only; the file itself is served by the download route.
+      db
+        .select({
+          id: taskAttachments.id,
+          filename: taskAttachments.filename,
+          size: taskAttachments.size,
+          contentType: taskAttachments.contentType,
+          uploadedBy: taskAttachments.uploadedBy,
+          uploaderName: users.name,
+        })
+        .from(taskAttachments)
+        .leftJoin(users, eq(users.id, taskAttachments.uploadedBy))
+        .where(eq(taskAttachments.taskId, taskId))
+        .orderBy(asc(taskAttachments.createdAt)),
     ]);
-    return { subtasks: items, blockers, github };
+    return { subtasks: items, blockers, github, attachments };
   });
 }
 
@@ -272,6 +298,55 @@ export async function setTaskSprint(
           ? `#${task.number} ${name} sprintine eklendi.`
           : `#${task.number} sprintten çıkarıldı.`,
         metadata: { sprintId },
+      });
+    });
+    revalidatePath("/app", "layout");
+  });
+}
+
+// Uploaders remove their own files; owners and admins can remove any.
+export async function deleteAttachment(
+  projectId: string,
+  attachmentId: string,
+) {
+  return attempt(async () => {
+    z.uuid().parse(attachmentId);
+    const user = await access(projectId, true);
+    const [row] = await db
+      .select({
+        id: taskAttachments.id,
+        uploadedBy: taskAttachments.uploadedBy,
+        filename: taskAttachments.filename,
+        taskId: tasks.id,
+        number: tasks.number,
+        workspaceId: sql<string>`(select workspace_id from projects where id = ${tasks.projectId})`,
+      })
+      .from(taskAttachments)
+      .innerJoin(tasks, eq(tasks.id, taskAttachments.taskId))
+      .where(
+        and(
+          eq(taskAttachments.id, attachmentId),
+          eq(tasks.projectId, projectId),
+        ),
+      );
+    if (!row) throw new UserError("Dosya bulunamadı.");
+    if (row.uploadedBy !== user.id) {
+      const me = await workspaceAccess(row.workspaceId, user.id);
+      if (!canManageMembers(me.role))
+        throw new UserError(
+          "Bu dosyayı yalnızca ekleyen kişi veya yöneticiler silebilir.",
+        );
+    }
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(taskAttachments)
+        .where(eq(taskAttachments.id, attachmentId));
+      await recordActivity(tx, {
+        projectId,
+        type: "task.updated",
+        actorId: user.id,
+        taskId: row.taskId,
+        message: `#${row.number} görevinden dosya silindi: ${row.filename}`,
       });
     });
     revalidatePath("/app", "layout");

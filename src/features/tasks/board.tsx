@@ -578,6 +578,8 @@ export function Board({
               taskId={editing.id}
               candidates={tasks}
               canWrite={editable}
+              viewerId={viewer.id}
+              canModerate={viewer.canModerate}
             />
           )}
           {editing !== "new" && (
