@@ -4,7 +4,11 @@ import { db } from "@/server/db";
 import { githubInstallations } from "@/server/db/schema";
 import { currentUser, workspaceAccess } from "@/server/projects/service";
 import { canManageMembers } from "@/server/permissions";
-import { githubConfig, readInstallState } from "@/server/github/security";
+import {
+  githubConfig,
+  readInstallState,
+  safeReturnPath,
+} from "@/server/github/security";
 
 // GitHub redirects here after the app is installed. The installation is only
 // linked to a workspace when (1) the signed state matches the signed-in user
@@ -12,8 +16,16 @@ import { githubConfig, readInstallState } from "@/server/github/security";
 // own authorisation, that they can access this installation.
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const state = readInstallState(url.searchParams.get("state"));
+  // A verified state may ask to return somewhere else in the app.
+  const target = safeReturnPath(state?.returnTo) ?? "/app/github";
   const back = (query: string) =>
-    NextResponse.redirect(new URL(`/app/github?${query}`, url.origin));
+    NextResponse.redirect(
+      new URL(
+        `${target}${target.includes("?") ? "&" : "?"}${query}`,
+        url.origin,
+      ),
+    );
 
   const user = await currentUser();
   if (!user)
@@ -26,7 +38,6 @@ export async function GET(request: Request) {
 
   const installationId = Number(url.searchParams.get("installation_id"));
   const code = url.searchParams.get("code");
-  const state = readInstallState(url.searchParams.get("state"));
   if (!Number.isSafeInteger(installationId) || installationId <= 0 || !code)
     return back("error=missing");
   if (!state || state.userId !== user.id) return back("error=state");

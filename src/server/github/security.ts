@@ -35,7 +35,13 @@ export function verifyWebhookSignature(
 
 // The install flow round-trips this value through GitHub. It binds the
 // installation to the workspace and user that started it and expires.
-type InstallState = { workspaceId: string; userId: string; exp: number };
+type InstallState = {
+  workspaceId: string;
+  userId: string;
+  exp: number;
+  // Where to send the user afterwards; only in-app paths are accepted.
+  returnTo?: string;
+};
 
 const stateKey = () => {
   const secret = process.env.BETTER_AUTH_SECRET;
@@ -43,12 +49,22 @@ const stateKey = () => {
   return `github-install:${secret}`;
 };
 
-export function signInstallState(workspaceId: string, userId: string) {
+export const safeReturnPath = (path: string | undefined) =>
+  path && /^\/(app|onboarding)(\/|\?|$)/.test(path) && !path.includes("//")
+    ? path
+    : undefined;
+
+export function signInstallState(
+  workspaceId: string,
+  userId: string,
+  returnTo?: string,
+) {
   const payload = Buffer.from(
     JSON.stringify({
       workspaceId,
       userId,
       exp: Date.now() + 60 * 60 * 1000,
+      returnTo: safeReturnPath(returnTo),
     } satisfies InstallState),
   ).toString("base64url");
   const sig = createHmac("sha256", stateKey())

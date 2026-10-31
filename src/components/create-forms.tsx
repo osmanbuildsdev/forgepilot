@@ -2,54 +2,8 @@
 import { unwrap, errorMessage } from "@/lib/action-result";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createProject, createWorkspace } from "@/server/actions";
+import { createProject } from "@/server/actions";
 import { Button } from "@/components/ui/button";
-export function WorkspaceForm() {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-  return (
-    <form
-      className="form-grid"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setError("");
-        const f = new FormData(e.currentTarget);
-        try {
-          await createWorkspace(f.get("name")).then(unwrap);
-          router.push("/app/projects/new");
-          router.refresh();
-        } catch (e) {
-          setError(
-            errorMessage(e, "Çalışma alanı oluşturulamadı. Tekrar dene."),
-          );
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <label className="field">
-        Çalışma alanı adı
-        <input
-          name="name"
-          placeholder="Örn. Acme Labs"
-          minLength={2}
-          maxLength={100}
-          required
-        />
-      </label>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      <Button disabled={busy}>
-        {busy ? "Oluşturuluyor…" : "Çalışma alanını oluştur →"}
-      </Button>
-    </form>
-  );
-}
 export function ProjectForm({
   workspaces,
 }: {

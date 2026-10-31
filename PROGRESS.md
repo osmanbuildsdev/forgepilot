@@ -17,7 +17,8 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Proje genel bakış ve aktivite kayıtları
 - [x] Gemini ile görev önerisi (onay öncesi DB'ye yazılmaz)
 - [x] Sunucu tarafı yetki kontrolü (viewer yazamaz)
-- [x] Basit landing sayfası, login/register, onboarding
+- [x] Basit landing sayfası, login/register
+- [x] 5 adımlı onboarding: profil, çalışma alanı, ilk proje (elle / AI / GitHub reposundan), GitHub bağlantısı (kurulumdan sonra kaldığı yere döner), sonraki adımlar
 
 ## Yapılacaklar
 
@@ -115,3 +116,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Arka plan işleri ve zamanlanmış bildirimler | Worker Next.js dışında çalışacak şekilde ayrıldı; gerçek Redis ile henüz denenmedi |
 | 2026-10-30 | Raporlar ve grafikler | Görsel kontrol, sunucudan istemciye fonksiyon geçirme hatasını yakaladı ve düzeltildi |
 | 2026-10-30 | Ayarlar sayfaları | Ücretli plan veya ödeme taklidi yok |
+| 2026-10-31 | 5 adımlı onboarding | GitHub kurulum dönüşü yalnızca uygulama içi adreslere izin verir |

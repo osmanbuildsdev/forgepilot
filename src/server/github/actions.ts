@@ -6,6 +6,7 @@ import { UserError, attempt } from "@/server/errors";
 import { db } from "@/server/db";
 import {
   githubInstallations,
+  projects,
   githubRepositories,
   projectRepositories,
   taskGithubLinks,
@@ -26,9 +27,10 @@ import {
 
 const refresh = () => revalidatePath("/app", "layout");
 
-export async function githubInstallUrl(workspaceId: string) {
+export async function githubInstallUrl(workspaceId: string, returnTo?: string) {
   return attempt(async () => {
     z.uuid().parse(workspaceId);
+    z.string().max(300).optional().parse(returnTo);
     if (!githubAppConfigured())
       throw new UserError("GitHub App bu sunucuda yapılandırılmamış.");
     const user = await requireUser();
@@ -37,7 +39,9 @@ export async function githubInstallUrl(workspaceId: string) {
       throw new UserError(
         "GitHub'ı yalnızca sahip veya yöneticiler bağlayabilir.",
       );
-    const state = encodeURIComponent(signInstallState(workspaceId, user.id));
+    const state = encodeURIComponent(
+      signInstallState(workspaceId, user.id, returnTo),
+    );
     return `https://github.com/apps/${githubConfig().slug}/installations/new?state=${state}`;
   });
 }
@@ -170,5 +174,84 @@ export async function resolveCompletionSuggestion(
       }
     });
     refresh();
+  });
+}
+
+// Creates a project for a repository and connects the two in one step.
+export async function createProjectFromRepository(
+  workspaceId: string,
+  repositoryId: string,
+  input: unknown,
+) {
+  return attempt(async () => {
+    z.uuid().parse(workspaceId);
+    z.uuid().parse(repositoryId);
+    const data = z
+      .object({
+        name: z.string().trim().min(2).max(100),
+        key: z
+          .string()
+          .regex(
+            /^[A-Z][A-Z0-9]{1,9}$/,
+            "Anahtar 2–10 büyük harf veya rakam olmalı.",
+          ),
+      })
+      .parse(input);
+    const user = await requireUser();
+    await workspaceAccess(workspaceId, user.id, true);
+    const [repo] = await db
+      .select({
+        id: githubRepositories.id,
+        fullName: githubRepositories.fullName,
+      })
+      .from(githubRepositories)
+      .innerJoin(
+        githubInstallations,
+        eq(githubInstallations.id, githubRepositories.installationId),
+      )
+      .where(
+        and(
+          eq(githubRepositories.id, repositoryId),
+          eq(githubInstallations.workspaceId, workspaceId),
+          isNull(githubRepositories.removedAt),
+          isNull(githubInstallations.deletedAt),
+        ),
+      );
+    if (!repo) throw new UserError("Bu repo bu çalışma alanına bağlı değil.");
+    const [taken] = await db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(
+        and(eq(projects.workspaceId, workspaceId), eq(projects.key, data.key)),
+      );
+    if (taken)
+      throw new UserError(
+        `${data.key} anahtarı bu çalışma alanında zaten kullanılıyor.`,
+      );
+    const projectId = await db.transaction(async (tx) => {
+      const [project] = await tx
+        .insert(projects)
+        .values({
+          workspaceId,
+          name: data.name,
+          key: data.key,
+          description: `${repo.fullName} reposu için proje.`,
+          createdBy: user.id,
+        })
+        .returning({ id: projects.id });
+      await tx
+        .insert(projectRepositories)
+        .values({ projectId: project.id, repositoryId, connectedBy: user.id });
+      await recordActivity(tx, {
+        projectId: project.id,
+        type: "project.created",
+        actorId: user.id,
+        message: `Proje ${repo.fullName} reposundan oluşturuldu.`,
+        metadata: { repositoryId },
+      });
+      return project.id;
+    });
+    refresh();
+    return projectId;
   });
 }
