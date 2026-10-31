@@ -123,3 +123,4 @@ Tahmini genel ilerleme: kapsamın kodu tamamlandı (~%90). Kalan iş gerçek ser
 | 2026-10-31 | Dosya ekleri | Migration 0015; SVG\/HTML gibi çalıştırılabilir türler reddedilir |
 | 2026-10-31 | Örnek veri yenilendi | Tarihler bugüne göre hesaplanır; örnek ekip arkadaşları giriş yapamaz; GitHub verisi uydurulmaz |
 | 2026-10-31 | README yeniden yazıldı | Redis compose'a isteğe bağlı profil olarak eklendi |
+| 2026-10-31 | Landing sayfası genişletildi | Karşılaştırma tablosu, sekmeli ürün turu (sağlık skoru, Copilot, şablon, sprint), SSS; animasyonlar hareketi azalt ayarına uyar |

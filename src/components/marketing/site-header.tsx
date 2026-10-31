@@ -7,9 +7,10 @@ import { ThemeToggle } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 
 const links = [
-  ["#product", "Ürün"],
+  ["#tour", "Ürün turu"],
+  ["#why", "Neden ForgePilot"],
   ["#features", "Özellikler"],
-  ["#github", "GitHub entegrasyonu"],
+  ["#github", "GitHub"],
   ["#pricing", "Fiyatlandırma"],
 ] as const;
 
