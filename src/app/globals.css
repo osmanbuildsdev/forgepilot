@@ -1978,10 +1978,29 @@ select:focus {
   cursor: not-allowed;
 }
 
+.columns-editor {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.columns-editor li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 150px auto;
+  gap: 8px;
+  align-items: center;
+}
+.columns-editor input,
+.columns-editor select {
+  height: 32px;
+}
+
 /* Kanban */
 .board {
   display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 20px;
@@ -3098,7 +3117,7 @@ select:focus {
     padding: 18px;
   }
   .board {
-    grid-template-columns: repeat(5, 250px);
+    grid-auto-columns: 250px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

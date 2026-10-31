@@ -18,6 +18,7 @@ import {
   taskDependencies,
   sprints,
   milestones,
+  projectColumns,
 } from "@/server/db/schema";
 import { canWrite } from "@/server/permissions";
 export function configured() {
@@ -190,6 +191,7 @@ export async function projectData(projectId: string, userId: string) {
       blockers.map((b) => [b.taskId, b.open]),
     ) as Record<string, number>,
     ...(await planningOptions(projectId)),
+    columns: await boardColumns(projectId),
   };
 }
 // Lightweight lists for selects (task form, board filter).
@@ -207,6 +209,43 @@ export async function planningOptions(projectId: string) {
       .orderBy(sql`${milestones.dueDate} asc nulls last`),
   ]);
   return { sprints: sprintRows, milestones: milestoneRows };
+}
+export async function boardColumns(projectId: string) {
+  return db
+    .select({
+      id: projectColumns.id,
+      name: projectColumns.name,
+      status: projectColumns.status,
+    })
+    .from(projectColumns)
+    .where(eq(projectColumns.projectId, projectId))
+    .orderBy(projectColumns.position);
+}
+// A task's column must belong to the project and match its status; a stale
+// column (e.g. the status was changed in the form) is dropped so the task
+// falls back to the first column of its status.
+export async function normalizeColumns<
+  T extends { columnId: string | null; status: string },
+>(projectId: string, items: T[]) {
+  const ids = [
+    ...new Set(items.map((i) => i.columnId).filter((x): x is string => !!x)),
+  ];
+  if (!ids.length) return items;
+  const found = await db
+    .select({ id: projectColumns.id, status: projectColumns.status })
+    .from(projectColumns)
+    .where(
+      and(
+        eq(projectColumns.projectId, projectId),
+        inArray(projectColumns.id, ids),
+      ),
+    );
+  if (found.length !== ids.length)
+    throw new UserError("Seçilen kolon bu projeye ait değil.");
+  return items.map((i) => {
+    const column = found.find((c) => c.id === i.columnId);
+    return column && column.status !== i.status ? { ...i, columnId: null } : i;
+  });
 }
 // Sprints and milestones referenced by tasks must belong to the same project;
 // a closed sprint cannot receive new work.

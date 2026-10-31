@@ -13,7 +13,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Sparkles } from "lucide-react";
+import { Columns3, GripVertical, Plus, Sparkles } from "lucide-react";
 import type { Task, Label, Sprint } from "@/server/db/schema";
 import {
   saveTasks,
@@ -27,16 +27,17 @@ import { TaskCardContent } from "@/components/task-card";
 import { Modal } from "@/components/modal";
 import { TaskComments } from "./task-comments";
 import { TaskChecklist } from "./task-checklist";
+import { ColumnsEditor } from "./columns-editor";
+import {
+  columnOf,
+  defaultColumns,
+  statuses,
+  type BoardColumn,
+  type Status,
+} from "./board-columns";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { generatedTasks } from "./schemas";
-const columns = [
-  ["backlog", "Backlog"],
-  ["todo", "Yapılacak"],
-  ["in_progress", "Devam ediyor"],
-  ["review", "İnceleme"],
-  ["done", "Tamamlandı"],
-] as const;
 type Draft = z.infer<typeof generatedTasks>;
 function Card({
   task,
@@ -92,17 +93,17 @@ function Card({
   );
 }
 function Column({
-  status,
+  id,
   title,
   count,
   children,
 }: {
-  status: string;
+  id: string;
   title: string;
   count: number;
   children: React.ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <section ref={setNodeRef} className={`column ${isOver ? "over" : ""}`}>
       <div className="column-heading">
@@ -128,6 +129,7 @@ export function Board({
   sprints,
   milestones,
   initialSprint,
+  columns: customColumns,
 }: {
   projectId: string;
   projectKey: string;
@@ -143,7 +145,12 @@ export function Board({
   sprints: { id: string; name: string; status: Sprint["status"] }[];
   milestones: { id: string; name: string }[];
   initialSprint: string;
+  columns: { id: string; name: string; status: Status }[];
 }) {
+  const columns: BoardColumn[] = customColumns.length
+    ? customColumns.map((c) => ({ ...c, custom: true }))
+    : defaultColumns;
+  const [editingColumns, setEditingColumns] = useState(false);
   const router = useRouter();
   const [editing, setEditing] = useState<Task | "new" | null>(null);
   const [ai, setAi] = useState(false);
@@ -186,11 +193,16 @@ export function Board({
   }
   async function dragEnd(event: DragEndEvent) {
     const task = tasks.find((t) => t.id === event.active.id);
-    const status = columns.find((c) => c[0] === event.over?.id)?.[0];
-    if (task && status && status !== task.status && !busy && editable)
-      await run(() =>
-        updateTask(projectId, task.id, { ...task, status }).then(unwrap),
-      );
+    const target = columns.find((c) => c.id === event.over?.id);
+    if (!task || !target || busy || !editable) return;
+    if (columnOf(task, columns)?.id === target.id) return;
+    await run(() =>
+      updateTask(projectId, task.id, {
+        ...task,
+        status: target.status,
+        columnId: target.custom ? target.id : null,
+      }).then(unwrap),
+    );
   }
   return (
     <>
@@ -247,6 +259,14 @@ export function Board({
             <Button
               variant="outline"
               disabled={busy}
+              onClick={() => setEditingColumns(true)}
+            >
+              <Columns3 size={15} />
+              Kolonlar
+            </Button>
+            <Button
+              variant="outline"
+              disabled={busy}
               onClick={async () => {
                 const name = window.prompt("Yeni etiket adı");
                 if (name?.trim())
@@ -277,16 +297,18 @@ export function Board({
       )}
       <DndContext sensors={sensors} onDragEnd={dragEnd}>
         <div className="board">
-          {columns.map(([status, title]) => (
-            <Column
-              key={status}
-              status={status}
-              title={title}
-              count={visible.filter((t) => t.status === status).length}
-            >
-              {visible
-                .filter((t) => t.status === status)
-                .map((t) => (
+          {columns.map((column) => {
+            const inColumn = visible.filter(
+              (t) => columnOf(t, columns)?.id === column.id,
+            );
+            return (
+              <Column
+                key={column.id}
+                id={column.id}
+                title={column.name}
+                count={inColumn.length}
+              >
+                {inColumn.map((t) => (
                   <Card
                     key={t.id}
                     task={t}
@@ -304,18 +326,26 @@ export function Board({
                     disabled={!editable || busy}
                   />
                 ))}
-              {!visible.some((t) => t.status === status) && (
-                <p
-                  className="muted"
-                  style={{ fontSize: 11, padding: "10px 2px" }}
-                >
-                  Henüz görev yok
-                </p>
-              )}
-            </Column>
-          ))}
+                {!inColumn.length && (
+                  <p
+                    className="muted"
+                    style={{ fontSize: 11, padding: "10px 2px" }}
+                  >
+                    Henüz görev yok
+                  </p>
+                )}
+              </Column>
+            );
+          })}
         </div>
       </DndContext>
+      {editingColumns && (
+        <ColumnsEditor
+          projectId={projectId}
+          columns={columns}
+          onClose={() => setEditingColumns(false)}
+        />
+      )}
       {editing && (
         <Modal
           title={
@@ -372,7 +402,7 @@ export function Board({
                   defaultValue={editing === "new" ? "backlog" : editing.status}
                   disabled={!editable}
                 >
-                  {columns.map(([value, label]) => (
+                  {statuses.map(([value, label]) => (
                     <option value={value} key={value}>
                       {label}
                     </option>

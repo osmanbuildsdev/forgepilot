@@ -38,7 +38,7 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 - [x] Yorumlar (ekle, düzenle, sil; yöneticiler moderasyon yapabilir) ve sağdan açılan görev paneli
 - [x] Alt görevler (kontrol listesi) ve görev bağımlılıkları (döngü kontrolü, kartta "Engelli" rozeti)
 - [ ] Dosya ekleri
-- [ ] Özel Kanban kolonları
+- [x] Özel Kanban kolonları: her kolon bir duruma bağlı (raporlar ve sağlık skoru bozulmaz), ekle/yeniden adlandır/sırala/sil, varsayılana dön; silinen kolondaki görevler aynı durumun ilk kolonuna düşer
 - [x] Proje ayarları: ad ve açıklama düzenleme, anahtarı yazarak onaylı silme (yalnızca sahip/yönetici)
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)
 - [x] Sprintler (planla, başlat, tamamla; retrospektif, hız geçmişi, geride kalma uyarısı)
@@ -117,3 +117,4 @@ Tahmini genel ilerleme: ~%10–12 (MVP listesi ~%40–45)
 | 2026-10-30 | Raporlar ve grafikler | Görsel kontrol, sunucudan istemciye fonksiyon geçirme hatasını yakaladı ve düzeltildi |
 | 2026-10-30 | Ayarlar sayfaları | Ücretli plan veya ödeme taklidi yok |
 | 2026-10-31 | 5 adımlı onboarding | GitHub kurulum dönüşü yalnızca uygulama içi adreslere izin verir |
+| 2026-10-31 | Özel Kanban kolonları | Migration 0014; her durumun en az bir kolonu olması zorunlu |

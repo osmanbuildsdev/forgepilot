@@ -20,6 +20,7 @@ import {
   projectAccess,
   assertAssignable,
   assertPlanningRefs,
+  normalizeColumns,
 } from "@/server/projects/service";
 import {
   projectInput,
@@ -78,6 +79,7 @@ export async function saveTasks(projectId: string, input: unknown) {
     for (const id of new Set(data.tasks.map((t) => t.assigneeId)))
       await assertAssignable(project.workspaceId, id);
     await assertPlanningRefs(projectId, data.tasks);
+    const items = await normalizeColumns(projectId, data.tasks);
     await db.transaction(async (tx) => {
       const [p] = await tx
         .update(projects)
@@ -90,7 +92,7 @@ export async function saveTasks(projectId: string, input: unknown) {
       const created = await tx
         .insert(tasks)
         .values(
-          data.tasks.map((t, i) => ({
+          items.map((t, i) => ({
             ...t,
             projectId,
             number: p.nextTaskNumber - data.tasks.length + i + 1,
@@ -152,13 +154,14 @@ export async function updateTask(
       .where(and(eq(tasks.id, taskId), eq(tasks.projectId, projectId)));
     // A task may stay in the (possibly closed) sprint it already belongs to.
     await assertPlanningRefs(projectId, [data], current?.sprintId ?? null);
+    const [values] = await normalizeColumns(projectId, [data]);
     await db.transaction(async (tx) => {
       const [t] = await tx
         .update(tasks)
         .set({
-          ...data,
+          ...values,
           completedAt:
-            data.status === "done"
+            values.status === "done"
               ? sql`coalesce(${tasks.completedAt}, now())`
               : null,
           updatedAt: new Date(),

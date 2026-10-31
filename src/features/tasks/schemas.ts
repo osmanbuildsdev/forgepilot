@@ -24,6 +24,7 @@ export const taskInput = aiTaskInput.extend({
   ),
   sprintId: optionalId,
   milestoneId: optionalId,
+  columnId: optionalId,
 });
 export const generatedTasks = z.object({
   tasks: z.array(aiTaskInput).min(1).max(15),

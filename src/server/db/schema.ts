@@ -154,6 +154,12 @@ export const tasks = pgTable(
       (): AnyPgColumn => milestones.id,
       { onDelete: "set null" },
     ),
+    // Custom board column; when null the task sits in the first column of
+    // its status.
+    columnId: uuid("column_id").references(
+      (): AnyPgColumn => projectColumns.id,
+      { onDelete: "set null" },
+    ),
     createdBy: text("created_by")
       .notNull()
       .references(() => user.id),
@@ -214,6 +220,25 @@ export const milestones = pgTable(
     ...dates(),
   },
   (t) => [index("milestone_project").on(t.projectId, t.dueDate)],
+);
+// Custom Kanban columns. Each belongs to one status, so reports and health
+// keep working on statuses while teams shape the board as they like.
+export const projectColumns = pgTable(
+  "project_columns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    status: statusEnum("status").notNull(),
+    position: integer("position").notNull(),
+    ...dates(),
+  },
+  (t) => [
+    uniqueIndex("column_project_name").on(t.projectId, t.name),
+    index("column_project_position").on(t.projectId, t.position),
+  ],
 );
 export const labels = pgTable(
   "labels",
@@ -709,3 +734,4 @@ export type Sprint = typeof sprints.$inferSelect;
 export type Milestone = typeof milestones.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type DocumentTemplate = typeof documentTemplates.$inferSelect;
+export type ProjectColumn = typeof projectColumns.$inferSelect;

@@ -42,6 +42,7 @@ export default async function Page({
         viewer={{ id: user.id, canModerate: canManageMembers(member.role) }}
         sprints={data.sprints}
         milestones={data.milestones}
+        columns={data.columns}
         initialSprint={
           sprint === "none" || data.sprints.some((s) => s.id === sprint)
             ? (sprint as string)
