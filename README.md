@@ -121,19 +121,23 @@ GitHub ile giriş, aşağıdaki GitHub App'ten ayrıdır.
 ### GitHub App (repo erişimi ve webhook'lar)
 
 1. GitHub → Settings → Developer settings → GitHub Apps → **New GitHub App**.
-2. **Setup URL:** `<site>/api/github/setup`. "Request user authorization (OAuth) during installation" seçeneğini aç.
+2. **Redirect URI (Callback URL):** `<site>/api/github/setup`. "Request user authorization (OAuth) during installation" seçeneğini aç. Bu seçenek açıkken GitHub kurulumdan sonra Setup URL'ye değil bu adrese döner; Setup URL boş kalabilir.
 3. **Webhook URL:** `<site>/api/github/webhook`. Güçlü bir webhook secret belirle.
-4. **İzinler (salt okunur):** Contents, Metadata, Pull requests, Checks.
-5. **Olaylar:** Push, Pull request, Check suite, Installation, Installation repositories.
-6. Bir private key oluştur ve `.env` içine şunları yaz:
+4. **Repository izinleri (salt okunur):** Contents, Metadata, Pull requests, Checks. Organization ve Account izinleri gerekmez.
+5. **Olaylar:** Push, Pull request, Check suite, Check run. Installation olayları her uygulamaya otomatik gelir.
+6. `.env` içine şunları yaz:
    - `GITHUB_APP_ID`
-   - `GITHUB_APP_SLUG`
+   - `GITHUB_APP_SLUG` (uygulama sayfasının adresindeki `github.com/apps/<slug>`)
    - `GITHUB_APP_CLIENT_ID`
-   - `GITHUB_APP_CLIENT_SECRET`
-   - `GITHUB_APP_PRIVATE_KEY`
+   - `GITHUB_APP_CLIENT_SECRET` ("Generate a new client secret")
    - `GITHUB_WEBHOOK_SECRET`
+   - `GITHUB_APP_PRIVATE_KEY` şu an kullanılmıyor; boş bırakılabilir.
 
-GitHub localhost'a erişemez. Yerelde webhook almak için [smee.io](https://smee.io) gibi bir tünel kullan.
+GitHub localhost'a erişemez. Yerelde webhook almak için [smee.io](https://smee.io) gibi bir tünel kullan ve tüneli uygulamayı kurmadan önce çalıştır; repo listesi kurulum olayıyla gelir.
+
+```powershell
+npx smee-client --url https://smee.io/<kanalın> --target http://localhost:3000/api/github/webhook
+```
 
 Webhook imzası doğrulanır ve her teslimat bir kez işlenir. Kurulumun kullanıcıya ait olduğu GitHub üzerinden doğrulanır. Birleşen PR görevi kapatmaz; yalnızca onay bekleyen bir öneri oluşturur.
 
