@@ -10,7 +10,7 @@ Yapay zekâ önerir ve kanıtını gösterir; karar her zaman senin.
 [Canlı sürüm](https://forgepilot-gold.vercel.app) · [Özellikler](#özellikler) · [Kurulum](#kurulum) · [İlerleme](PROGRESS.md)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Gemini-8E75B2?logo=googlegemini&logoColor=white)
 ![Durum](https://img.shields.io/badge/durum-erken%20s%C3%BCr%C3%BCm-c2410c)
