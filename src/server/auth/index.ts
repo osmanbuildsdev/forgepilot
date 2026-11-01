@@ -3,8 +3,25 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/server/db";
 import * as schema from "@/server/db/schema";
+// The site origin, tolerant of trailing slashes and stray whitespace. On
+// Vercel the production domain is also trusted, so a deployment never
+// rejects its own sign-ups.
+function origins() {
+  const configured = process.env.BETTER_AUTH_URL?.trim().replace(/\/+$/, "");
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined;
+  return {
+    baseURL: configured || vercel,
+    trusted: [configured, vercel].filter((o): o is string => Boolean(o)),
+  };
+}
+
 function createAuth() {
+  const { baseURL, trusted } = origins();
   return betterAuth({
+    baseURL,
+    trustedOrigins: trusted,
     database: drizzleAdapter(db, { provider: "pg", schema }),
     emailAndPassword: { enabled: true, minPasswordLength: 12 },
     socialProviders: {
