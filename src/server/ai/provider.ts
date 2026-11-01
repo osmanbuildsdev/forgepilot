@@ -69,7 +69,7 @@ function geminiError(error: unknown) {
 }
 
 export class GeminiProvider implements AIProvider {
-  readonly model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  readonly model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
   private client() {
     if (!process.env.GEMINI_API_KEY)

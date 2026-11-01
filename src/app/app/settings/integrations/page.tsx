@@ -35,7 +35,7 @@ export default async function Page() {
     {
       name: "Gemini (AI)",
       on: Boolean(process.env.GEMINI_API_KEY),
-      detail: `Model: ${process.env.GEMINI_MODEL || "gemini-2.5-flash"}. Proje üretici, Copilot, doküman AI ve özetler bunu kullanır.`,
+      detail: `Model: ${process.env.GEMINI_MODEL || "gemini-3.8-flash"}. Proje üretici, Copilot, doküman AI ve özetler bunu kullanır.`,
       link: { href: "/app/settings/ai", label: "AI kullanımı" },
     },
     {
