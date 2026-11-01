@@ -79,10 +79,13 @@ export function OnboardingWizard({
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError("");
+    // Steps share one page, so busy must reset after success too or the
+    // next step's button stays disabled.
     try {
       await action();
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
       setBusy(false);
     }
   }
