@@ -14,7 +14,7 @@ type Attachment = {
   uploaderName: string | null;
 };
 
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
 const sizeLabel = (n: number) =>
   n < 1024
     ? `${n} B`
@@ -50,7 +50,7 @@ export function TaskAttachments({
     try {
       for (const file of files) {
         if (file.size > MAX_BYTES)
-          throw new Error(`${file.name}: dosya 10 MB sınırını aşıyor.`);
+          throw new Error(`${file.name}: dosya 4 MB sınırını aşıyor.`);
         const body = new FormData();
         body.set("file", file);
         const response = await fetch(
@@ -154,7 +154,7 @@ export function TaskAttachments({
       ) : (
         <p className="subtle" style={{ fontSize: 12, marginTop: 4 }}>
           {canWrite
-            ? "Görsel, PDF, metin veya ofis dosyası ekleyebilirsin (en fazla 10 MB)."
+            ? "Görsel, PDF, metin veya ofis dosyası ekleyebilirsin (en fazla 4 MB)."
             : "Ek yok."}
         </p>
       )}

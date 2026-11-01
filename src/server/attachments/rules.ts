@@ -1,5 +1,6 @@
 // Attachment rules shared by the upload route, the download route and tests.
-export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+// Vercel rejects request bodies over ~4.5 MB, so stay below that.
+export const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
 export const MAX_ATTACHMENTS_PER_TASK = 20;
 
 // The stored type comes from the extension, never from the browser, so a

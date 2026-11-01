@@ -165,6 +165,13 @@ GET /api/cron/reminders.due
 Authorization: Bearer <CRON_SECRET>
 ```
 
+## Vercel'e yayınlama
+
+1. Barındırılan bir PostgreSQL oluştur (ör. Neon, Frankfurt bölgesi) ve migration'ları yerelden o veritabanına uygula: `DATABASE_URL` geçici olarak o adresi gösterirken `npm run db:migrate`.
+2. Vercel'de projeyi içe aktar ve ortam değişkenlerini gir. `BETTER_AUTH_URL` sitenin adresi olmalı.
+3. `vercel.json` fonksiyonları Frankfurt'ta (`fra1`) çalıştırır ve zamanlanmış işleri günde bir kez tetikler. Vercel bu isteklere `CRON_SECRET` değerini kendisi ekler.
+4. Worker ve Redis gerekmez. Vercel istek gövdesini yaklaşık 4,5 MB ile sınırladığı için dosya ekleri en fazla 4 MB'tır.
+
 ## Ortam değişkenleri
 
 | Değişken | Gerekli | Kullanım |

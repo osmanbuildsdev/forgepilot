@@ -39,7 +39,7 @@ Tahmini genel ilerleme: kapsamın kodu tamamlandı (~%90). Kalan iş gerçek ser
 - [x] Etiketler (proje bazlı, görev başına çoklu seçim)
 - [x] Yorumlar (ekle, düzenle, sil; yöneticiler moderasyon yapabilir) ve sağdan açılan görev paneli
 - [x] Alt görevler (kontrol listesi) ve görev bağımlılıkları (döngü kontrolü, kartta "Engelli" rozeti)
-- [x] Dosya ekleri: PostgreSQL'de saklanır (10 MB, görev başına 20 dosya), tür uzantıdan belirlenir, yalnızca güvenli görseller tarayıcıda açılır, indirme yanıtı sandbox'lı
+- [x] Dosya ekleri: PostgreSQL'de saklanır (4 MB, görev başına 20 dosya), tür uzantıdan belirlenir, yalnızca güvenli görseller tarayıcıda açılır, indirme yanıtı sandbox'lı
 - [x] Özel Kanban kolonları: her kolon bir duruma bağlı (raporlar ve sağlık skoru bozulmaz), ekle/yeniden adlandır/sırala/sil, varsayılana dön; silinen kolondaki görevler aynı durumun ilk kolonuna düşer
 - [x] Proje ayarları: ad ve açıklama düzenleme, anahtarı yazarak onaylı silme (yalnızca sahip/yönetici)
 - [x] Workspace üyeleri, davet bağlantısı, rol yönetimi (e-posta gönderimi henüz yok)

@@ -36,7 +36,7 @@ export async function POST(
   }
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_ATTACHMENT_BYTES + 64 * 1024)
-    return fail("Dosya en fazla 10 MB olabilir.", 413);
+    return fail("Dosya en fazla 4 MB olabilir.", 413);
 
   let file: FormDataEntryValue | null;
   try {
@@ -47,7 +47,7 @@ export async function POST(
   if (!(file instanceof File)) return fail("Dosya bulunamadı.", 400);
   if (file.size === 0) return fail("Dosya boş.", 400);
   if (file.size > MAX_ATTACHMENT_BYTES)
-    return fail("Dosya en fazla 10 MB olabilir.", 413);
+    return fail("Dosya en fazla 4 MB olabilir.", 413);
   const filename = cleanFilename(file.name);
   const contentType = attachmentType(filename);
   if (!contentType)
