@@ -20,26 +20,13 @@ import {
 } from "@/server/github/actions";
 import { unwrap, errorMessage } from "@/lib/action-result";
 import { Logo } from "@/components/logo";
+import { projectFromRepo } from "@/features/github/repo-project";
 import { Button } from "@/components/ui/button";
 
 type Workspace = { id: string; name: string; role: string };
 type Project = { id: string; name: string; key: string };
 
 const STEPS = ["Profil", "Çalışma alanı", "İlk proje", "GitHub", "Hazır"];
-
-// "acme/forge-mobile" -> name "forge-mobile", key "FORGE".
-function fromRepo(fullName: string) {
-  const name = fullName.split("/").pop() ?? fullName;
-  const key =
-    name
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, " ")
-      .trim()
-      .split(/\s+/)[0]
-      ?.replace(/^[0-9]+/, "")
-      .slice(0, 6) || "PROJ";
-  return { name, key: key.length >= 2 ? key : "PROJ" };
-}
 
 export function OnboardingWizard({
   step,
@@ -263,7 +250,7 @@ export function OnboardingWizard({
                 onPick={(repo) =>
                   run(async () => {
                     if (mode === "import") {
-                      const { name, key } = fromRepo(repo.fullName);
+                      const { name, key } = projectFromRepo(repo.fullName);
                       const id = await createProjectFromRepository(
                         workspace.id,
                         repo.id,

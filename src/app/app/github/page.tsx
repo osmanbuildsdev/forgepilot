@@ -107,6 +107,7 @@ export default async function Page({
             id: w.id,
             name: w.name,
             canConnect: canManageMembers(w.role),
+            canCreate: canWrite(w.role),
           }))}
           installations={installations}
           projects={projectRows

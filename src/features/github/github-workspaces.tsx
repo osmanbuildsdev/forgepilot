@@ -2,10 +2,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GitBranch, Lock } from "lucide-react";
-import { githubInstallUrl, connectRepository } from "@/server/github/actions";
+import { GitBranch, Lock, Plus } from "lucide-react";
+import {
+  githubInstallUrl,
+  connectRepository,
+  createProjectFromRepository,
+} from "@/server/github/actions";
 import { unwrap, errorMessage } from "@/lib/action-result";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/modal";
+import { projectFromRepo } from "./repo-project";
 
 type Installation = {
   id: string;
@@ -37,13 +43,23 @@ export function GithubWorkspaces({
   installations,
   projects,
 }: {
-  workspaces: { id: string; name: string; canConnect: boolean }[];
+  workspaces: {
+    id: string;
+    name: string;
+    canConnect: boolean;
+    canCreate: boolean;
+  }[];
   installations: Installation[];
   projects: { id: string; name: string; workspaceId: string }[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [creating, setCreating] = useState<{
+    workspaceId: string;
+    repositoryId: string;
+    fullName: string;
+  } | null>(null);
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true);
@@ -159,30 +175,51 @@ export function GithubWorkspaces({
                               </span>
                             )}
                           </div>
-                          {available.length > 0 && (
-                            <select
-                              aria-label={`${r.fullName} reposunu projeye bağla`}
-                              value=""
-                              disabled={busy}
-                              onChange={(e) => {
-                                const projectId = e.target.value;
-                                if (projectId)
-                                  void run(() =>
-                                    connectRepository(projectId, r.id).then(
-                                      unwrap,
-                                    ),
-                                  );
-                              }}
-                              style={{ width: "auto", height: 30 }}
-                            >
-                              <option value="">Projeye bağla…</option>
-                              {available.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+                          <span className="row" style={{ gap: 6 }}>
+                            {w.canCreate && (
+                              <Button
+                                size="sm"
+                                variant={
+                                  r.projects.length ? "ghost" : "outline"
+                                }
+                                disabled={busy}
+                                onClick={() =>
+                                  setCreating({
+                                    workspaceId: w.id,
+                                    repositoryId: r.id,
+                                    fullName: r.fullName,
+                                  })
+                                }
+                              >
+                                <Plus size={14} />
+                                Proje oluştur
+                              </Button>
+                            )}
+                            {available.length > 0 && (
+                              <select
+                                aria-label={`${r.fullName} reposunu projeye bağla`}
+                                value=""
+                                disabled={busy}
+                                onChange={(e) => {
+                                  const projectId = e.target.value;
+                                  if (projectId)
+                                    void run(() =>
+                                      connectRepository(projectId, r.id).then(
+                                        unwrap,
+                                      ),
+                                    );
+                                }}
+                                style={{ width: "auto", height: 30 }}
+                              >
+                                <option value="">Projeye bağla…</option>
+                                {available.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </span>
                         </li>
                       );
                     })}
@@ -198,6 +235,90 @@ export function GithubWorkspaces({
           </section>
         );
       })}
+      {creating && (
+        <CreateFromRepo
+          repo={creating}
+          onClose={() => setCreating(null)}
+          onCreated={(id) => {
+            setCreating(null);
+            router.push(`/app/projects/${id}/board`);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+// Creates a project named after the repository and connects the two.
+function CreateFromRepo({
+  repo,
+  onClose,
+  onCreated,
+}: {
+  repo: { workspaceId: string; repositoryId: string; fullName: string };
+  onClose: () => void;
+  onCreated: (projectId: string) => void;
+}) {
+  const suggested = projectFromRepo(repo.fullName);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <Modal title={`${repo.fullName} için proje`} onClose={onClose}>
+      <form
+        className="form-grid"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          const f = new FormData(e.currentTarget);
+          try {
+            const id = await createProjectFromRepository(
+              repo.workspaceId,
+              repo.repositoryId,
+              { name: f.get("name"), key: f.get("key") },
+            ).then(unwrap);
+            onCreated(id);
+          } catch (err) {
+            setError(errorMessage(err, "Proje oluşturulamadı. Tekrar dene."));
+            setBusy(false);
+          }
+        }}
+      >
+        <label className="field">
+          Proje adı
+          <input
+            name="name"
+            defaultValue={suggested.name}
+            minLength={2}
+            maxLength={100}
+            required
+          />
+        </label>
+        <label className="field">
+          Proje anahtarı
+          <input
+            name="key"
+            defaultValue={suggested.key}
+            pattern="[A-Z][A-Z0-9]{1,9}"
+            minLength={2}
+            maxLength={10}
+            required
+            onInput={(e) => {
+              e.currentTarget.value = e.currentTarget.value.toUpperCase();
+            }}
+          />
+          <span className="muted">
+            Görev numaraları bununla başlar (ör. {suggested.key}-1).
+          </span>
+        </label>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <Button disabled={busy}>Oluştur ve bağla</Button>
+      </form>
+    </Modal>
   );
 }
